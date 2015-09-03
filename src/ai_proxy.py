@@ -1,4 +1,4 @@
-# AI Agent
+# AI Proxy
 
 import ctypes
 from multiprocessing import Process
