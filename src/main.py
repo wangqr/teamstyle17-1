@@ -8,7 +8,7 @@ import time
 import threading
 
 
-import core.src
+import core
 import ai_agent
 
 __version__='0.1-a'
@@ -19,7 +19,7 @@ last_action_time_stamp = 0
 
 def arg_handler() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Teamstyle 17 platform')
-    parser.add_argument('-v', '--version', action='version', version='ts17-platform '+__version__+' [ts17-core ver '+core.src.__version__+']')
+    parser.add_argument('-v', '--version', action='version', version='ts17-platform '+__version__+' [ts17-core ver '+core.__version__+']')
     parser.add_argument('-l', '--log', default=time.strftime('%Y%m%d%H%M%S')+'.rpy', type=argparse.FileType('w'), help='set the name of the replay file (default: current time)')
     parser.add_argument('-V', '--verbose', action='store_true', help='enable verbose output')
     parser.add_argument('-d', '--debug', action='store_true', help='allow controlling game procedure by ui')
