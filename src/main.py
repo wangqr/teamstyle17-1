@@ -9,7 +9,7 @@ import threading
 
 
 import core
-import ai_agent
+import ai_proxy
 
 __version__='0.1-a'
 
@@ -27,7 +27,7 @@ def arg_handler() -> argparse.Namespace:
     parser.add_argument('ai', nargs='+', help='the path of the AI file')
     return parser.parse_args()
 
-def push_queue_ai_agent(obj):
+def push_queue_ai_proxy(obj):
     #obj.time_stamp = time.time() - gameStartTime
     action_queue.put((time.time() - game_start_time, obj))
 
@@ -37,8 +37,8 @@ def main():
     # init logic
     #TODO
 
-    # init ai_agent
-    ai_agent.start(args.ai, push_queue_ai_agent)
+    # init ai_proxy
+    ai_proxy.start(args.ai, push_queue_ai_proxy)
 
     # init ui
     #TODO
