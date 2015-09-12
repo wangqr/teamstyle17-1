@@ -52,7 +52,7 @@ def run_main(args: dict):
     global action_queue
     global game_start_time
 
-    last_action_time_stamp = 0
+    last_action_timestamp = 0
 
     # init logic
     #TODO
@@ -75,11 +75,11 @@ def run_main(args: dict):
     # main loop
     while(game_started):
         next_action=action_queue.get(block=True)
-        if (next_action[0] > last_action_time_stamp):
-            last_action_time_stamp = next_action[0]
-        if(last_action_time_stamp > time_limit):
+        if (next_action[0] > last_action_timestamp):
+            last_action_timestamp = next_action[0]
+        if(last_action_timestamp > time_limit):
             break
-        next_action[1].time_stamp = last_action_time_stamp
+        next_action[1].timestamp = last_action_timestamp
         #TODO log action
         next_action[1].run()
 
