@@ -12,10 +12,14 @@ by Ma-Xujie
 
 选手代码编译成 dll 文件，由平台 AI Proxy 调用。
 
-AI Proxy 将选手需要用到的函数在启动选手 AI 的线程封装好以后，用 Python ctypes 库中的 [CFUNCTYPE](https://docs.python.org/3.4/library/ctypes.html#ctypes.CFUNCTYPE) 类型转换为 C 函数指针并作为参数传入 dll 。
+AI Proxy 将选手需要用到的函数在启动选手 AI 的线程封装好以后，用 Python ctypes 库中的 [CFUNCTYPE](https://docs.python.org/3.4/library/ctypes.html#ctypes.CFUNCTYPE) 转换为 C 函数指针并作为参数传入 dll 。
 
 启动 dll 时使用传入的函数指针初始化 AI 要调用的各种函数。
 
 此后选手即可直接调用 Python 中的函数。
 
-（暂定，视情况调整）
+选手的指令与地图信息将以 json 字符串的形式传递
+
+在 C++ 中对 json 串进行处理（暂定）
+
+另外需要注意 MSVC 默认编译 32 位 dll，似乎只能用 32 位 Python 运行

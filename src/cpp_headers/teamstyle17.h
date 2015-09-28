@@ -1,19 +1,22 @@
 #ifndef _TEAMSTYLE17_H_INCLUDE
 #define _TEAMSTYLE17_H_INCLUDE
-#include <memory.h> // memcpy
+#include <stdio.h>
+#include <string.h> // strcpy
 
 struct GameInfo {
 	// TODO
 	int bar;
-} INFO; // This is a global variable
+} INFO; // Global variable
 
-GameInfo *GetInfo() { // It is ok if player ZUOSI and change something in the structure so I don't use const :-)
-	extern void *(*PyUpdate)();   // This is a global variable in communicate.cpp
-	const GameInfo *py_info = (GameInfo *) PyUpdate();
+void LoadPyInfo(char *py_info) { // Json string to GameInfo ...
+	// test
+	printf("AI recieved a message: %s\n", py_info);
+}
 
-	//memcpy((void *)&INFO, (const void *)py_info, sizeof(GameInfo));   // copy game info from Platform (Python) to cpp local variable
-	INFO = *py_info;
-	return &INFO;
+void UpdateInfo() {
+	extern char *(*PyUpdate)();
+	char *py_info = PyUpdate();
+	LoadPyInfo(py_info);
 }
 
 void Action1(int foo) {  // A model function..

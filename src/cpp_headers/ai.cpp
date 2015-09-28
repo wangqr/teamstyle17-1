@@ -4,7 +4,9 @@
 
 void AIMain() {
 	// Write your AI codes here :-)
-	GameInfo *info = GetInfo();
-	printf("Hello, world!\n");
+	UpdateInfo();
+	printf("AI start\n");
+	Action1(0);
+	printf("AI send a message\n");
 	exit(0);
 }
