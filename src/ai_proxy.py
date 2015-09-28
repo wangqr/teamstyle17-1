@@ -7,39 +7,21 @@ import ctypes
 from threading import Thread
 from multiprocessing import Process
 
-
-class Action(object):
-    # TODO
-    def __init__(self):
-        pass
-
-    def run(self):
-        pass
-
-
-class CAction(ctypes.Structure):
-    # TODO
-    _fields_ = [('foo', ctypes.c_int)]
-
-
-class CGameInfo(ctypes.Structure):
-    # TODO: Game info
-    _fields_ = [('bar', ctypes.c_int)]
-
-
 def update_info(enqueue, ai_id):
-    # TODO: Get sth from logic
-    info = None
+    # Get sth from logic (send and get json strings?)
+    py_info = None
 
-    # TODO: Convert info from Python type to C type
-    c_info = CGameInfo()
+    # Convert info from Python string to C string
+    c_info = None
 
-    return c_info  # C structure
+    return c_info  # C string
 
 
-def get_action_from_cpp(enqueue, ai_id, c_act):  # c_act is a C structure
-    # TODO: Use c_act to create an action
-    act = Action()
+def get_action_from_cpp(enqueue, ai_id, c_action):
+    # c_action is a c string
+
+    # c_action --> act
+    act = None
 
     # Send action to platform main thread
     enqueue(act)
@@ -59,18 +41,18 @@ class AICore(object):
         return dll_main
 
     def start_ai(self, enqueue):
-        def get_action(c_act):
+        def get_action(c_action):
             # This function will be convert into a C function pointer and pass to dll_main
-            get_action_from_cpp(enqueue, self.id, c_act)
+            get_action_from_cpp(enqueue, self.id, c_action)
 
-        c_get_action = ctypes.CFUNCTYPE(None, ctypes.POINTER(CAction))(get_action)
+        c_get_action = ctypes.CFUNCTYPE(None, ctypes.c_char_p)(get_action)
 
         def update():
             # Also pass to dll_main
             info = update_info(enqueue, self.id)
             return ctypes.addressof(info)
 
-        c_update = ctypes.CFUNCTYPE(ctypes.c_void_p)(update)  # return a C structure pointer to ai (a void*, infect)
+        c_update = ctypes.CFUNCTYPE(ctypes.c_char_p)(update)  # return a c char pointer (C string)
 
         # Start AI
         self.dll_main(c_get_action, c_update)
@@ -104,8 +86,7 @@ def start(ai_paths, enqueue, method='thread'):
 
     assert isinstance(ai_paths, list)
 
-    if method not in ('thread', 'process'):
-        method = 'thread'
+    method = method if method in ('thread', 'process') else 'thread'
 
     # Create AI threads
     ai_threads = []
