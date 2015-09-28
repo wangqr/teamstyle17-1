@@ -8,5 +8,4 @@ void AIMain() {
 	printf("AI start\n");
 	Action1(0);
 	printf("AI send a message\n");
-	exit(0);
 }

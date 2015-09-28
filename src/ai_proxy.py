@@ -4,21 +4,28 @@
 # AI Proxy
 
 import ctypes
-from threading import Thread
+from threading import Thread, current_thread, Lock
 from multiprocessing import Process
+
 
 def update_info(enqueue, ai_id):
     # Get sth from logic (send and get json strings?)
     py_info = None
 
     # Convert info from Python string to C string
-    c_info = None
+    c_info = ctypes.create_string_buffer(b"UpdateInfo (send by Python)")  # test
+    print(c_info.value)
 
     return c_info  # C string
 
 
 def get_action_from_cpp(enqueue, ai_id, c_action):
-    # c_action is a c string
+    # c_action is a bytes string
+    # TODO: THREAD LOCK (important!)
+
+    assert isinstance(c_action, bytes)
+    ai_id = int(current_thread().name[-1])
+    print('Received a massage from ai %d (%s) :' % (ai_id, current_thread().name), c_action)  # test
 
     # c_action --> act
     act = None
@@ -55,18 +62,19 @@ class AICore(object):
         c_update = ctypes.CFUNCTYPE(ctypes.c_char_p)(update)  # return a c char pointer (C string)
 
         # Start AI
-        self.dll_main(c_get_action, c_update)
+        self.dll_main(c_get_action, c_update, self.id)
 
 
 class AIThread(object):  # The name of this class is Thread but it may be a Process
     def __init__(self, core, method='thread'):
         assert isinstance(core, AICore)
         self.core = core
-        self.method = Process if method == 'process' else Thread  # How to start an AI
+        self.method = Process if method == 'process' else Thread
 
     def start(self, enqueue):
         # Start AI thread
-        ai_thread = self.method(target=self.core.start_ai, args=(enqueue,))
+
+        ai_thread = self.method(target=self.core.start_ai, args=(enqueue,), name='ai%d' % self.core.id)
 
         try:
             ai_thread.start()
@@ -86,7 +94,7 @@ def start(ai_paths, enqueue, method='thread'):
 
     assert isinstance(ai_paths, list)
 
-    method = method if method in ('thread', 'process') else 'thread'
+    method = 'thread'
 
     # Create AI threads
     ai_threads = []
