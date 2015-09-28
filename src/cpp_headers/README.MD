@@ -7,6 +7,7 @@ by Ma-Xujie
 - ai.cpp
 - communicate.cpp
 - teamstyle17.h
+- ai_test.dll --> 一个已经编译好用来测试通信的 dll 文件
 
 ## 通信方式
 
