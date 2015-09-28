@@ -4,6 +4,7 @@
 # AI Proxy
 
 import ctypes
+import copy
 from threading import Thread, current_thread, Lock
 from multiprocessing import Process
 
@@ -13,15 +14,13 @@ def update_info(enqueue, ai_id):
     py_info = None
 
     # Convert info from Python string to C string
-    c_info = ctypes.create_string_buffer(b"UpdateInfo (send by Python)")  # test
+    c_info = ctypes.create_string_buffer(b"UpdateInfo (sent by Python)")  # test
     print(c_info.value)
-
     return c_info  # C string
 
 
 def get_action_from_cpp(enqueue, ai_id, c_action):
     # c_action is a bytes string
-    # TODO: THREAD LOCK (important!)
 
     assert isinstance(c_action, bytes)
     ai_id = int(current_thread().name[-1])

@@ -8,6 +8,7 @@
 #endif
 
 int AI_ID;
+char ACTION[100];
 
 struct GameInfo;
 
@@ -28,10 +29,8 @@ void InitFunctions(GetActionFuncType py_get_action, UpdateFuncType py_update) {
 void SendAction(int foo) {
 	// Send Action to Python
 	// test
-	char *action = (char*)malloc(100 * sizeof(char));
-	sprintf(action, "Test message (Sent by AI%d)", AI_ID);
-	PyGetAction(action);
-	free(action);
+	sprintf(ACTION, "Test message (Sent by AI%d)", AI_ID);
+	PyGetAction(ACTION);
 }
 
 
@@ -45,8 +44,10 @@ DLLEXPORT void StartAI(GetActionFuncType py_get_action, UpdateFuncType py_update
 	InitFunctions(py_get_action, py_update);
 	UpdateInfo();
 
+	printf("AI %d start\n", AI_ID);
 	while (true) {
 		AIMain();   // Start AI
 		break;
 	}
+	_sleep(100);
 }

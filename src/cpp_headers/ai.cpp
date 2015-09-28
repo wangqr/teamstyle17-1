@@ -5,7 +5,6 @@
 void AIMain() {
 	// Write your AI codes here :-)
 	UpdateInfo();
-	printf("AI start\n");
 	Action1(0);
 	printf("AI send a message\n");
 }
