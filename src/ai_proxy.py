@@ -5,11 +5,12 @@
 
 import ctypes
 import action
+import time
 from threading import Thread, current_thread, Lock
 from multiprocessing import Process
 
 
-def update_info(enqueue, ai_id):
+def update_info(enqueue_func, ai_id):
     # TODO: Get sth from logic (send and get json strings?)
     py_info = None
 
@@ -19,7 +20,7 @@ def update_info(enqueue, ai_id):
     return c_info  # C string
 
 
-def get_action_from_cpp(enqueue, ai_id, c_action):
+def get_action_from_cpp(enqueue_func, ai_id, c_action):
     # TODO: c_action is a bytes string
 
     assert isinstance(c_action, bytes)
@@ -30,7 +31,7 @@ def get_action_from_cpp(enqueue, ai_id, c_action):
     act = None
 
     # Send action to platform main thread
-    enqueue(act)
+    enqueue_func(act)
 
 
 class AICore(object):
@@ -46,16 +47,16 @@ class AICore(object):
         dll_main = dll.StartAI  # StartAi is the main function in dll (a C function)
         return dll_main
 
-    def start_ai(self, enqueue):
+    def start_ai(self, enqueue_func):
         def get_action(c_action):
             # This function will be convert into a C function pointer and pass to dll_main
-            get_action_from_cpp(enqueue, self.id, c_action)
+            get_action_from_cpp(enqueue_func, self.id, c_action)
 
         c_get_action = ctypes.CFUNCTYPE(None, ctypes.c_char_p)(get_action)
 
         def update():
             # Also pass to dll_main
-            info = update_info(enqueue, self.id)
+            info = update_info(enqueue_func, self.id)
             return ctypes.addressof(info)
 
         c_update = ctypes.CFUNCTYPE(ctypes.c_char_p)(update)  # return a c char pointer (C string)
@@ -65,29 +66,30 @@ class AICore(object):
 
 
 class AIThread(object):  # The name of this class is Thread but it may be a Process
-    def __init__(self, core, method='thread'):
+    def __init__(self, core, enqueue_func, method='thread'):
         assert isinstance(core, AICore)
         self.core = core
         self.method = Process if method == 'process' else Thread
+        self.ai_thread = None
 
-    def start(self, enqueue):
+    def create_thread(self, enqueue_func):
+        self.ai_thread = self.method(target=self.core.start_ai, args=(enqueue_func,), name='ai%d' % self.core.id)
+
+    def start(self):
         # Start AI thread
-
-        ai_thread = self.method(target=self.core.start_ai, args=(enqueue,), name='ai%d' % self.core.id)
-
         try:
-            ai_thread.start()
+            self.ai_thread.start()
         except Exception as error:  # TODO: Deal with runtime errors
             raise error
 
 
-def start(ai_paths, enqueue, method='thread'):
+def start(ai_paths, enqueue_func, method='thread'):
     """
     Interface Function for platform main thread
 
     Args:
     ai_paths : a list, paths of ai files (maybe .dll files)
-    enqueue : a function defined by main thread, be used to send message
+    enqueue_func : a function defined by main thread, be used to send message
     method : either 'thread' (default) or 'process', choose to start each ai whether in a subthread or a subprocess
     """
 
@@ -98,9 +100,9 @@ def start(ai_paths, enqueue, method='thread'):
     # Create AI threads
     ai_threads = []
     for ai_id, path in enumerate(ai_paths):
-        ai_core = AICore(ai_id, path)
-        ai_threads.append(AIThread(ai_core, method))
+        ai_threads.append(AIThread(AICore(ai_id, path), method))
+        ai_threads[ai_id].create_thread(enqueue_func)
 
     # Start AI Threads
     for ai in ai_threads:
-        ai.start(enqueue)
+        ai.start()
