@@ -4,13 +4,13 @@
 # AI Proxy
 
 import ctypes
-import copy
+import action
 from threading import Thread, current_thread, Lock
 from multiprocessing import Process
 
 
 def update_info(enqueue, ai_id):
-    # Get sth from logic (send and get json strings?)
+    # TODO: Get sth from logic (send and get json strings?)
     py_info = None
 
     # Convert info from Python string to C string
@@ -20,7 +20,7 @@ def update_info(enqueue, ai_id):
 
 
 def get_action_from_cpp(enqueue, ai_id, c_action):
-    # c_action is a bytes string
+    # TODO: c_action is a bytes string
 
     assert isinstance(c_action, bytes)
     ai_id = int(current_thread().name[-1])
@@ -36,7 +36,7 @@ def get_action_from_cpp(enqueue, ai_id, c_action):
 class AICore(object):
     def __init__(self, ai_id, path):
         assert path.endswith(('.dll', '.so'))  # AI file should be a DLL or a Unix shared library
-        self.id = ai_id
+        self.id = ai_id  # TODO: ATTENTION! fix the bug of wrong id!
         self.path = path
         self.dll_main = self.load_dll_main()
 
