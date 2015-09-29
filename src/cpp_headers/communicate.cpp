@@ -43,8 +43,9 @@ DLLEXPORT void StartAI(GetActionFuncType py_get_action, UpdateFuncType py_update
 
 	InitFunctions(py_get_action, py_update);
 	UpdateInfo();
-
+	
 	printf("AI %d start\n", AI_ID);
+	
 	while (true) {
 		AIMain();   // Start AI
 		break;
