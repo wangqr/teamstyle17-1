@@ -31,13 +31,13 @@ def get_action_from_cpp(enqueue_func, ai_id, c_action):
     act = None
 
     # Send action to platform main thread
-    enqueue_func(act)
+    # enqueue_func(act)
 
 
 class AICore(object):
     def __init__(self, ai_id, path):
         assert path.endswith(('.dll', '.so'))  # AI file should be a DLL or a Unix shared library
-        self.id = ai_id  # TODO: ATTENTION! fix the bug of wrong id!
+        self.id = ai_id
         self.path = path
         self.dll_main = self.load_dll_main()
 
@@ -65,7 +65,7 @@ class AICore(object):
         self.dll_main(c_get_action, c_update, self.id)
 
 
-class AIThread(object):  # The name of this class is Thread but it may be a Process
+class AIThread(object):
     def __init__(self, core, enqueue_func, method='thread'):
         assert isinstance(core, AICore)
         self.core = core
@@ -83,14 +83,13 @@ class AIThread(object):  # The name of this class is Thread but it may be a Proc
             raise error
 
 
-def start(ai_paths, enqueue_func, method='thread'):
+def start(ai_paths, enqueue_func):
     """
     Interface Function for platform main thread
 
     Args:
     ai_paths : a list, paths of ai files (maybe .dll files)
     enqueue_func : a function defined by main thread, be used to send message
-    method : either 'thread' (default) or 'process', choose to start each ai whether in a subthread or a subprocess
     """
 
     assert isinstance(ai_paths, list)
