@@ -4,9 +4,9 @@
 # AI Proxy
 
 import ctypes
+import tempfile
 import action
-import time
-from threading import Thread, current_thread, Lock
+from threading import Thread, current_thread
 from multiprocessing import Process
 
 
@@ -95,6 +95,9 @@ def start(ai_paths, enqueue_func):
     assert isinstance(ai_paths, list)
 
     method = 'thread'
+
+    # TODO: Copy dll files to a temp dir and give each of them a unique file name
+
 
     # Create AI threads
     ai_threads = []
