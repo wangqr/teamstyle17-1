@@ -1,29 +1,29 @@
-// ¸úÍ¨ĞÅÓĞ¹ØµÄº¯Êı¶¨Òå & json ½âÎö
+ï»¿// è·Ÿé€šä¿¡æœ‰å…³çš„å‡½æ•°å®šä¹‰ & json è§£æ
 
 #include <stdio.h>  // sprintf
 #include "basic.h"
 #include "communicate.h"
-#include "./picojson/picojson.h"  // json µÄ½âÎöÆ÷
+#include "./picojson/picojson.h"  // json çš„è§£æå™¨
 
-// ÒÔÏÂÊÇÆ½Ì¨ÓÃ
+// ä»¥ä¸‹æ˜¯å¹³å°ç”¨
 
-GameInfo *LoadGameInfo(char *info_str) { // ½âÎö
-
+GameInfo *LoadGameInfo(char *info_str) { // è§£æ
+	return NULL;
 }
 
 PlayerStatus *LoadPlayerStatus(char *status_str) {
-
+	return NULL;
 }
 
 
-// ÒÔÏÂÊÇÑ¡ÊÖÓÃ£¬¾ßÌå¶¨ÒåÓÉ·¢ËÍµÄ json ´®¸ñÊ½À´¾ö¶¨
+// ä»¥ä¸‹æ˜¯é€‰æ‰‹ç”¨ï¼Œå…·ä½“å®šä¹‰ç”±å‘é€çš„ json ä¸²æ ¼å¼æ¥å†³å®š
 
 GameInfo *UpdateMap() {
-	
+	return NULL;
 }
 
 PlayerStatus *UpdateStatus() {
-
+	return NULL;
 }
 
 void Move(int element_id, Position des) {

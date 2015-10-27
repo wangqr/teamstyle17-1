@@ -4,34 +4,21 @@
 # AI Proxy
 
 import ctypes
-import tempfile
 import action
 from threading import Thread, current_thread
 from multiprocessing import Process
 
+def communicate_with_dll(dll_message, enqueue_func, ai_id):
+    assert isinstance(dll_message, bytes)
+    msg_send = str(dll_message)
 
-def update_info(enqueue_func, ai_id):
-    # TODO: Get sth from logic (send and get json strings?)
-    py_info = None
+    # send msg_send to logic
 
-    # Convert info from Python string to C string
-    c_info = ctypes.create_string_buffer(b"UpdateInfo (sent by Python)")  # test
-    print(c_info.value)
-    return c_info  # C string
+    # receive  from logic
 
+    msg_receive = 'msg'
 
-def get_action_from_cpp(enqueue_func, ai_id, c_action):
-    # TODO: c_action is a bytes string
-
-    assert isinstance(c_action, bytes)
-    ai_id = int(current_thread().name[-1])
-    print('Received a massage from ai %d (%s) :' % (ai_id, current_thread().name), c_action)  # test
-
-    # c_action --> act
-    act = None
-
-    # Send action to platform main thread
-    # enqueue_func(act)
+    return ctypes.addressof(ctypes.create_string_buffer(msg_receive))
 
 
 class AICore(object):
@@ -48,21 +35,16 @@ class AICore(object):
         return dll_main
 
     def start_ai(self, enqueue_func):
-        def get_action(c_action):
-            # This function will be convert into a C function pointer and pass to dll_main
-            get_action_from_cpp(enqueue_func, self.id, c_action)
 
-        c_get_action = ctypes.CFUNCTYPE(None, ctypes.c_char_p)(get_action)
-
-        def update():
+        def communicate(dll_message):
             # Also pass to dll_main
-            info = update_info(enqueue_func, self.id)
-            return ctypes.addressof(info)
+            assert isinstance(dll_message, bytes)
+            return communicate_with_dll(dll_message, enqueue_func, self.id)
 
-        c_update = ctypes.CFUNCTYPE(ctypes.c_char_p)(update)  # return a c char pointer (C string)
+        c_communicate = ctypes.CFUNCTYPE(ctypes.c_char_p, ctypes.c_char_p)(communicate)
 
         # Start AI
-        self.dll_main(c_get_action, c_update, self.id)
+        self.dll_main(c_communicate, self.id)
 
 
 class AIThread(object):
@@ -95,9 +77,6 @@ def start(ai_paths, enqueue_func):
     assert isinstance(ai_paths, list)
 
     method = 'thread'
-
-    # TODO: Copy dll files to a temp dir and give each of them a unique file name
-
 
     # Create AI threads
     ai_threads = []

@@ -1,4 +1,4 @@
-// 在这里声明选手要用到的函数 & 引用 basic.h
+﻿// 在这里声明选手要用到的函数 & 引用 basic.h
 
 #ifndef TEAMSTYLE17_H_
 #define TEAMSTYLE17_H_

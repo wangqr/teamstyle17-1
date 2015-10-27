@@ -1,9 +1,11 @@
-// 声明与 Python 之间通信有关的函数
+﻿// 声明与 Python 之间通信有关的函数
 
 # ifndef COMMUNICATE_H_
 # define COMMUNICATE_H_
 
 #include "basic.h"
+
+extern int AI_ID;
 
 // 这里明确下来和 Python 间传递信息的函数有且仅有一个发送 + 接收字符串的函数
 

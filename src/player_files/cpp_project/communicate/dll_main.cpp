@@ -1,22 +1,31 @@
-// Æô¶¯ dll µÄÖ÷º¯Êı
+ï»¿// å¯åŠ¨ dll çš„ä¸»å‡½æ•°
+
+#ifdef _WIN32
+
+#define DLLEXPORT extern "C" __declspec(dllexport)
+#include <windows.h>
+#define SLEEP(x) Sleep(x)
+
+#else
+#define DLLEXPORT extern "C"
+#include <unistd.h>
+#define SLEEP(x) usleep((x) * 1000)
+
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "basic.h"
 #include "communicate.h"
 
-#ifdef _WIN32
-#define DLLEXPORT extern "C" __declspec(dllexport)
-#else
-#define DLLEXPORT extern "C"
-#endif
+int AI_ID;
 
-extern int AI_ID;
+ComFuncType Communicate;
 
 void AIMain();
 
 DLLEXPORT void StartAI(ComFuncType communicate, int ai_id) {
-	// ÓÃËüÀ´Æô¶¯ ai
+	// ç”¨å®ƒæ¥å¯åŠ¨ ai
 
 	AI_ID = ai_id;
 	Communicate = communicate;
@@ -24,5 +33,5 @@ DLLEXPORT void StartAI(ComFuncType communicate, int ai_id) {
 	while (true) {
 		AIMain();   // Start AI
 	}
-	_sleep(100);
+	SLEEP(100);
 }
