@@ -4,6 +4,7 @@
 # define COMMUNICATE_H_
 
 #include "basic.h"
+#include "./picojson/picojson.h"  // json 的解析器
 
 extern int AI_ID;
 
