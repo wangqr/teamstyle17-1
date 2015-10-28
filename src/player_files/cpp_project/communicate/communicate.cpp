@@ -19,22 +19,26 @@ PlayerStatus *LoadPlayerStatus(char *status_str) {
 // 以下是选手用，具体定义由发送的 json 串格式来决定
 
 GameInfo *UpdateMap() {
+	auto msg = Communicate("QRY_Update Map");
+	puts(msg);
 	return NULL;
 }
 
 PlayerStatus *UpdateStatus() {
+	auto msg = Communicate("QRY_Update Status");
+	puts(msg);
 	return NULL;
 }
 
 void Move(int element_id, Position des) {
-
+	Communicate("ACT_Move");
 }
 
 void UseSkill(int element_id, SkillType skill, Position des) {
-
+	Communicate("ACT_Use Skill");
 }
 
-void UpdateSkill(SkillType skill) {
-
+void UpgradeSkill(SkillType skill) {
+	Communicate("ACT_Upgrade Skill");
 }
 
