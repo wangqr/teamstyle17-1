@@ -27,6 +27,7 @@ import threading
 import ai_proxy
 import action
 import core
+#import core.interface
 #import logger
 
 __version__='0.1-a'
@@ -61,7 +62,7 @@ def run_main(args: dict):
     last_action_timestamp = 0
 
     # init logic
-    #TODO
+    main_logic = core.interface.Interface()
 
     # init ai_proxy
     ai_proxy.start(args['<ai>'], push_queue_ai_proxy)
@@ -103,7 +104,7 @@ def run_main(args: dict):
         if (next_action[1].action_name != 'query'):
             #logger.log(next_action[1])
             pass
-        next_action[1].run()
+        next_action[1].run(main_logic)
     ai_proxy.stopAI()
 
 def replay_main(args: dict):

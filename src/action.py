@@ -15,12 +15,19 @@ def sendInstruction(string):
 '''
 
 class Action:
-    def __init__(self, ai_id, action_name):
+    def __init__(self, ai_id, action_name, action_json):
         self.ai_id = ai_id
         self.timestamp = 0
         self.action_name = action_name
-    def run(self):
-        sendInstruction(json.dumps(self.__dict__))
+        self.action_json = action_json
+    def run(self, logic):
+        act = json.loads(self.action_json)
+        if (act["action"] in ["init", "move", "use_skill", "upgrade_skill"]):
+            logic.setInstruction(self.action_json)
+        elif (act["action"] in ["query_map", "query_status"]):
+            ret = logic.getInstruction(self.action_json)
+            'TODO'
+            pass
 
 class QueryMap(Action):
     def __init__(self, ai_id):
