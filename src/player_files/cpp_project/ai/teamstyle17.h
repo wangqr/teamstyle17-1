@@ -5,9 +5,9 @@
 
 # include "../communicate/basic.h"
 
-GameInfo *UpdateMap();
+const MapInfo *UpdateMap();
 
-PlayerStatus *UpdateStatus();
+const PlayerStatus *UpdateStatus();
 
 void Move(int element_id, Position des);
 

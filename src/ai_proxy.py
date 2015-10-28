@@ -14,13 +14,13 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id):
     msg_send = str(dll_message)[2:-1]
 
     # send msg_send to logic
-    msg_receive = ''
+    msg_receive = '********' # 一个很奇怪的问题：用 C++ 读取 Python 传过来的长字符串的时候前 8 个字符会随机（目测）变成别的字符，所以用 * 替换掉...
 
     if msg_send.startswith('ACT'):  # 只发送不接收
         enqueue_func(msg_send[4:])
 
     elif msg_send.startswith('QRY'):  # 发送 and 接收
-        msg_receive = enqueue_func(msg_send[4:])
+        msg_receive += enqueue_func(msg_send[4:])
 
     return ctypes.addressof(ctypes.create_string_buffer(bytes(msg_receive, encoding='ascii')))
 

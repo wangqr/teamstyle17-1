@@ -13,8 +13,6 @@
 
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
 #include "basic.h"
 #include "communicate.h"
 
@@ -30,13 +28,8 @@ DLLEXPORT void StartAI(ComFuncType communicate, int ai_id) {
 	AI_ID = ai_id;
 	Communicate = communicate;
 
-	int i = 0;
 	while (true) {
 		AIMain();   // Start AI
-		if (i++ > 5) {
-			break;
-		}
-		SLEEP(10);
 	}
-	SLEEP(100);
+	SLEEP(100); // 实际上没有什么卵用
 }

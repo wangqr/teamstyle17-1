@@ -17,6 +17,10 @@ enum SkillType {
 	kSkillTypes
 };
 
+const char SkillName[kSkillTypes][10] = { // 上面东西的字符串
+	"SHEILD"
+};
+
 
 struct Position {
 	int x;
@@ -54,7 +58,7 @@ struct PlayerStatus {
 
 const int kMaxElementNumber = 200; // 随手写的..
 
-struct GameInfo {
+struct MapInfo {
 	int my_id;
 	// int time; 不返回当前时间很不科学..
 	PlayerStatus my_status;
