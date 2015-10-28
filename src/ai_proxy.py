@@ -11,20 +11,19 @@ from multiprocessing import Process
 def communicate_with_dll(dll_message, enqueue_func, ai_id):
     assert isinstance(dll_message, bytes)
 
-    msg_type = str(dll_message)[0]
-    msg_send = str(dll_message)[1:]
-
+    msg_send = str(dll_message)[2:-1]
 
     # send msg_send to logic
+    msg_receive = ''
 
-    if msg_type == 'a':  # 只发送不接收
-        enqueue_func(msg_send)
-        msg_receive = ''
+    if msg_send.startswith('ACT'):  # 只发送不接收
+        enqueue_func(msg_send[4:])
 
-    if msg_type == 'b':  # 发送 and 接收
-        msg_receive = enqueue_func(msg_send)
+    elif msg_send.startswith('QRY'):  # 发送 and 接收
+        msg_receive = enqueue_func(msg_send[4:])
 
-    return ctypes.addressof(ctypes.create_string_buffer(bytes(msg_receive)))
+    return ctypes.addressof(ctypes.create_string_buffer(bytes(msg_receive, encoding='ascii')))
+
 
 
 class AICore(object):
