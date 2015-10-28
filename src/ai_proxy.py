@@ -10,15 +10,21 @@ from multiprocessing import Process
 
 def communicate_with_dll(dll_message, enqueue_func, ai_id):
     assert isinstance(dll_message, bytes)
-    msg_send = str(dll_message)
+
+    msg_type = str(dll_message)[0]
+    msg_send = str(dll_message)[1:]
+
 
     # send msg_send to logic
 
-    # receive  from logic
+    if msg_type == 'a':  # 只发送不接收
+        enqueue_func(msg_send)
+        msg_receive = ''
 
-    msg_receive = 'msg'
+    if msg_type == 'b':  # 发送 and 接收
+        msg_receive = enqueue_func(msg_send)
 
-    return ctypes.addressof(ctypes.create_string_buffer(msg_receive))
+    return ctypes.addressof(ctypes.create_string_buffer(bytes(msg_receive)))
 
 
 class AICore(object):
