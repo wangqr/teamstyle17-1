@@ -5,13 +5,13 @@
 
 # include "../communicate/basic.h"
 
-void UpdateMap();
+const MapInfo *UpdateMap();
 
-void UpdateStatus();
+const PlayerStatus *UpdateStatus();
 
-void Move(int element_id, Position des);
+void Move(Position des);
 
-void UseSkill(int element_id, SkillType skill, Position des);
+void UseSkill(SkillType skill, Position des, int target);
 
 void UpgradeSkill(SkillType skill);
 
