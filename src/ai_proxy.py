@@ -7,7 +7,6 @@ import ctypes
 from threading import Thread, current_thread
 from multiprocessing import Process
 
-
 def communicate_with_dll(dll_message, enqueue_func, ai_id):
     assert isinstance(dll_message, bytes)
 
@@ -38,8 +37,6 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id):
         enqueue_func(msg_send)
 
     return ctypes.addressof(ctypes.create_string_buffer(bytes(msg_from_logic, encoding='ascii')))
-
-    return ctypes.addressof(ctypes.create_string_buffer(bytes(msg_receive, encoding='ascii')))
 
 
 class AICore(object):
