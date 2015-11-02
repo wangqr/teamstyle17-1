@@ -1,4 +1,4 @@
-# C++ Headers
+# C++ Project
 
 by Ma-Xujie
 
@@ -16,9 +16,13 @@ AI Proxy 将选手需要用到的函数在启动选手 AI 的线程封装好以�
 
 选手的指令与地图信息将以 json 字符串的形式传递
 
-在 C++ 中对 json 串进行处理（暂定）
+在 C++ 中对 json 串进行处理
 
-# 已经发现的坑
+## 构建项目
+
+用 CMake 构建项目，安装好 CMake 的话直接把 cpp_project 拷贝出来以后 build_project 就好了，应该可以顺利生成 dll 文件...
+
+## 已经发现的坑
 
 - 需要注意 MSVC 默认编译 32 位 dll，似乎只能用 32 位 Python 运行
 - 如果两个 dll 文件名相同，会出现函数调用冲突。所以不能允许相同名称的 dll 同时运行
