@@ -4,28 +4,42 @@
 # AI Proxy
 
 import ctypes
-import action
 from threading import Thread, current_thread
 from multiprocessing import Process
+
 
 def communicate_with_dll(dll_message, enqueue_func, ai_id):
     assert isinstance(dll_message, bytes)
 
-    msg_send = str(dll_message)[2:-1]
+    msg = str(dll_message)[2:-1].split(sep=' ')
 
-    msg_send.replace('$ID', str(ai_id))
+    msg_from_logic = '********'  # 一个很奇怪的问题：用 C++ 读取 Python 传过来的长字符串的时候前 8 个字符会随机（目测）变成别的字符，所以用 * 替换掉...
 
-    # send msg_send to logic
-    msg_receive = '********' # 一个很奇怪的问题：用 C++ 读取 Python 传过来的长字符串的时候前 8 个字符会随机（目测）变成别的字符，所以用 * 替换掉...
+    if msg[0] == 'query_map':
+        msg_send = r'{"action": "query_map","time": 0,"ai_id": %d}' % ai_id
+        msg_from_logic += enqueue_func(msg_send)
 
-    if msg_send.startswith('ACT'):  # 只发送不接收
-        enqueue_func(msg_send[4:])
+    if msg[0] == 'query_status':
+        msg_send = r'{"action": "query_status","time": 0,"ai_id": %d}' % ai_id
+        msg_from_logic += enqueue_func(msg_send)
 
-    if msg_send.startswith('QRY'):  # 发送 and 接收
-        msg_receive += enqueue_func(msg_send[4:])
+    if msg[0] == 'move':
+        msg_send = r'{"action": "move","time": 0,"ai_id": %d,"x": %d,"y": %d,"z": %d}' % (
+            ai_id, int(msg[1]), int(msg[2]), int(msg[3]))
+        enqueue_func(msg_send)
+
+    if msg[0] == 'use_skill':
+        msg_send = r'{"action": "use_skill","time": 0,"ai_id": %d,"skill_type": "%s","x": %d,"y": %d,"z": %d,"target": %d}' \
+                   % (ai_id, msg[1], int(msg[2]), int(msg[3]), int(msg[4]), int(msg[5]))
+        enqueue_func(msg_send)
+
+    if msg[0] == 'upgrade_skill':
+        msg_send = r'{"action": "upgrade_skill","time": 0,"ai_id": %d,"skill_type": "%s"}' % (ai_id, msg[1])
+        enqueue_func(msg_send)
+
+    return ctypes.addressof(ctypes.create_string_buffer(bytes(msg_from_logic, encoding='ascii')))
 
     return ctypes.addressof(ctypes.create_string_buffer(bytes(msg_receive, encoding='ascii')))
-
 
 
 class AICore(object):
@@ -42,7 +56,6 @@ class AICore(object):
         return dll_main
 
     def start_ai(self, enqueue_func):
-
         def communicate(dll_message):
             # Also pass to dll_main
             assert isinstance(dll_message, bytes)

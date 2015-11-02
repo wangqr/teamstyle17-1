@@ -8,5 +8,5 @@ void AIMain() {
 	auto map = UpdateMap();
 	cout << map->elements_list_size << endl;
 	cout << map->elements[0].type << endl;
-	cout << map->my_id;
+	cout << map->my_team;
 }

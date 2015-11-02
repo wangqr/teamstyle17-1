@@ -1,4 +1,4 @@
-﻿// 跟通信有关的函数定义 & json 解析，这一部分要移动到 Python 中完成..
+﻿// 跟通信有关的函数定义 & json 解析
 
 #include <stdio.h>  // sprintf
 #include <string.h>
@@ -52,7 +52,7 @@ void LoadPlayerStatus(const char *status_str) {
 
 const MapInfo *UpdateMap() {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "QRY_{ \"action\": \"query_map\", \"time\": $t, \"ai_id\": $ID}");
+	sprintf(msg_send, "query_map");
 
 	char msg_receive[kMaxMessageLength];
 	strcpy(msg_receive, Communicate(msg_send) + 8);
@@ -61,21 +61,32 @@ const MapInfo *UpdateMap() {
 	return &MAP;
 }
 
-void Move(int element_id, Position des) {
+const PlayerStatus *UpdateStatus() {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "ACT_{ \"action\": \"move\", \"time\": $t, \"ai_id\": $ID, \"x\": %d, \"y\": %d, \"z\": %d}", des.x, des.y, des.z);
+	sprintf(msg_send, "query_status");
+
+	char msg_receive[kMaxMessageLength];
+	strcpy(msg_receive, Communicate(msg_send) + 8);
+
+	LoadPlayerStatus(msg_receive);
+	return &STATUS;
+}
+
+void Move(Position des) {
+	char msg_send[kMaxMessageLength];
+	sprintf(msg_send, "move %d %d %d", des.x, des.y, des.z);
 	Communicate(msg_send);
 }
 
-void UseSkill(int element_id, SkillType skill, Position des) {
+void UseSkill(SkillType skill, Position des, int target=0) {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "ACT_{ \"action\": \"use_skill\", \"time\": $t, \"ai_id\": $ID, \"skill_type\" : \"%s\",  \"x\": %d, \"y\": %d, \"z\": %d}", SkillName[skill], des.x, des.y, des.z);
+	sprintf(msg_send, "use_skill %s %d %d %d %d", SkillName[skill], des.x, des.y, des.z, target);
 	Communicate(msg_send);
 }
 
 void UpgradeSkill(SkillType skill) {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "ACT_{ \"action\": \"upgrade_skill\", \"time\": $t, \"ai_id\": $ID, \"skill_type\" : \"%s\"}", SkillName[skill]);
+	sprintf(msg_send, "upgrade_skill %s", SkillName[skill]);
 	Communicate(msg_send);
 }
 

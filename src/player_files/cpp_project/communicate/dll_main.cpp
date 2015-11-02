@@ -16,8 +16,6 @@
 #include "basic.h"
 #include "communicate.h"
 
-int AI_ID;
-
 ComFuncType Communicate;
 
 void AIMain();
@@ -25,7 +23,6 @@ void AIMain();
 DLLEXPORT void StartAI(ComFuncType communicate, int ai_id) {
 	// 用它来启动 ai
 
-	AI_ID = ai_id;
 	Communicate = communicate;
 
 	while (true) {

@@ -1,4 +1,4 @@
-﻿// 在这里定义选手用到的结构体 & 参数设置
+﻿// 在这里定义选手用到的结构体 & 参数设置 & 依然不知道现在有哪些选手可见的参数...
 
 #ifndef BASIC_H_
 #define BASIC_H_
@@ -13,7 +13,7 @@ enum ElementType {
 };
 
 enum SkillType {
-	SHEILD, // ?
+	SHEILD, // 还有哪些技能？以及它们的名字？
 	kSkillTypes
 };
 
@@ -22,7 +22,7 @@ const char SkillName[kSkillTypes][10] = { // 上面东西的字符串
 };
 
 
-struct Position {
+struct Position {  // 以及这个要改成 double...
 	int x;
 	int y;
 	int z;
