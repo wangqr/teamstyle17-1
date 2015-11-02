@@ -1,4 +1,4 @@
-﻿// 跟通信有关的函数定义 & json 解析
+﻿// 跟通信有关的函数定义 & json 解析，这一部分要移动到 Python 中完成..
 
 #include <stdio.h>  // sprintf
 #include <string.h>
@@ -48,13 +48,11 @@ void LoadPlayerStatus(const char *status_str) {
 }
 
 
-// 以下是选手用
+// 以下是选手用，ai_id 会在平台 AI Proxy 中填写，time 在平台主进程中填写
 
 const MapInfo *UpdateMap() {
-	MAP.my_id = AI_ID;
-
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "QRY_{ \"action\": \"query_map\", \"time\": $t, \"ai_id\": %d }", AI_ID);
+	sprintf(msg_send, "QRY_{ \"action\": \"query_map\", \"time\": $t, \"ai_id\": $ID}");
 
 	char msg_receive[kMaxMessageLength];
 	strcpy(msg_receive, Communicate(msg_send) + 8);
@@ -63,32 +61,21 @@ const MapInfo *UpdateMap() {
 	return &MAP;
 }
 
-const PlayerStatus *UpdateStatus() {
-	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "QRY_{ \"action\": \"query_status\", \"time\": $t}");
-
-	char msg_receive[kMaxMessageLength];
-	strcpy(msg_receive, Communicate(msg_send));
-
-	LoadPlayerStatus(msg_receive);
-	return &STATUS;
-}
-
 void Move(int element_id, Position des) {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "ACT_{ \"action\": \"move\", \"time\": $t, \"ai_id\": %d, \"x\": %d, \"y\": %d, \"z\": %d}", AI_ID, des.x, des.y, des.z);
+	sprintf(msg_send, "ACT_{ \"action\": \"move\", \"time\": $t, \"ai_id\": $ID, \"x\": %d, \"y\": %d, \"z\": %d}", des.x, des.y, des.z);
 	Communicate(msg_send);
 }
 
 void UseSkill(int element_id, SkillType skill, Position des) {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "ACT_{ \"action\": \"use_skill\", \"time\": $t, \"ai_id\": %d, \"skill_type\" : \"%s\",  \"x\": %d, \"y\": %d, \"z\": %d}", AI_ID, SkillName[skill], des.x, des.y, des.z);
+	sprintf(msg_send, "ACT_{ \"action\": \"use_skill\", \"time\": $t, \"ai_id\": $ID, \"skill_type\" : \"%s\",  \"x\": %d, \"y\": %d, \"z\": %d}", SkillName[skill], des.x, des.y, des.z);
 	Communicate(msg_send);
 }
 
 void UpgradeSkill(SkillType skill) {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "ACT_{ \"action\": \"upgrade_skill\", \"time\": $t, \"ai_id\": %d, \"skill_type\" : \"%s\"}", AI_ID, SkillName[skill]);
+	sprintf(msg_send, "ACT_{ \"action\": \"upgrade_skill\", \"time\": $t, \"ai_id\": $ID, \"skill_type\" : \"%s\"}", SkillName[skill]);
 	Communicate(msg_send);
 }
 
