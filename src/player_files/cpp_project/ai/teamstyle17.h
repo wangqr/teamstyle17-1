@@ -7,8 +7,6 @@
 
 const MapInfo *UpdateMap();
 
-const PlayerStatus *UpdateStatus();
-
 void Move(int element_id, Position des);
 
 void UseSkill(int element_id, SkillType skill, Position des);

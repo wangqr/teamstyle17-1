@@ -59,7 +59,7 @@ struct PlayerStatus {
 const int kMaxElementNumber = 200; // 随手写的..
 
 struct MapInfo {
-	int my_id;
+	int my_team;
 	// int time; 不返回当前时间很不科学..
 	PlayerStatus my_status;
 	Element elements[kMaxElementNumber];
