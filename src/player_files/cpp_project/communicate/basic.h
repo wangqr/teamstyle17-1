@@ -14,11 +14,13 @@ enum ElementType {
 
 enum SkillType {
 	SHEILD, // 还有哪些技能？以及它们的名字？
+	FIREBALL,
 	kSkillTypes
 };
 
 const char SkillName[kSkillTypes][10] = { // 上面东西的字符串
-	"SHEILD"
+	"SHEILD",
+	"FIREBALL"
 };
 
 

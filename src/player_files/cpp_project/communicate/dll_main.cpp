@@ -25,8 +25,13 @@ DLLEXPORT void StartAI(ComFuncType communicate, int ai_id) {
 
 	Communicate = communicate;
 
+//	int i = 0;
+
 	while (true) {
 		AIMain();   // Start AI
+//		if (++i > 20) {
+//			break;
+//		}
 	}
 	SLEEP(100); // 实际上没有什么卵用
 }
