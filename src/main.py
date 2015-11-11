@@ -81,8 +81,12 @@ def run_main(args: dict):
     # init ui
     # TODO
 
+    # get init action
+    init_json = '{"action":"init","seed":' + str(random.randrange(0,4294967296)) + '}'
+    main_logic.setInstruction(init_json)
+
     # init logger
-    logger = logger.Run_Logger()
+    logger = logger.Run_Logger(init_json)
 
     game_started = True
     game_start_time = time.time()
