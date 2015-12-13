@@ -91,7 +91,7 @@ class EndSignalGenerator (threading.Thread):
                 action_queue.put((0, end_action))
                 return
             else:
-                time.sleep((game_start_time + time_limit - current_time)*1)
+                time.sleep((game_start_time + time_limit - current_time)*0.61803398874989484820458683436564)
 
 
 def run_main(args: dict):
@@ -131,7 +131,7 @@ def run_main(args: dict):
     # main loop
     while game_started:
         next_action = action_queue.get(block=True)
-        print('['+str(time.time() - game_start_time)+'] \x1b[1;32m>>>>>>>>sig recv id=' + str(json.loads(next_action[1].action_json).get('ai_id')) +' ' + json.loads(next_action[1].action_json).get('action') + ' '+ next_action[1].action_name +'\x1b[m')
+        print('['+str(time.time() - game_start_time)+'] \x1b[1;32m>>>>>>>>recv id=' + str(json.loads(next_action[1].action_json).get('ai_id')) +' ' + json.loads(next_action[1].action_json).get('action') + ' '+ next_action[1].action_name +'\x1b[m')
         if next_action[1].action_name == '_pause':
             if args['-d']:
                 if game_paused:
@@ -155,7 +155,7 @@ def run_main(args: dict):
             # run_logger.log_action(next_action[1])
             pass
         next_action[1].run(main_logic)
-        print('['+str(time.time() - game_start_time)+'] \x1b[1;32m<<<<<<<<fin id=' + str(json.loads(next_action[1].action_json).get('ai_id')) +' ' + json.loads(next_action[1].action_json).get('action') +'\x1b[m')
+        print('['+str(time.time() - game_start_time)+'] \x1b[1;32m<<<<<<<<fin ' + next_action[1].action_json +'\x1b[m')
     # ai_proxy.stopAI()
     print('['+str(time.time() - game_start_time)+'] \x1b[1;31mquit\x1b[m')
     os.kill(os.getpid(), signal.SIGTERM)
