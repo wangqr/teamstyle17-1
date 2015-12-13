@@ -7,7 +7,12 @@ import ctypes
 from threading import Thread, current_thread
 from multiprocessing import Process
 
-def communicate_with_dll(dll_message, enqueue_func, ai_id):
+def set_string_value(buffer, string):
+    for i, char in enumerate(string):
+        buffer[i] = ord(char)
+    buffer[len(string)] = 0
+
+def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
     assert isinstance(dll_message, bytes)
 
     msg = str(dll_message)[2:-1].split(sep=' ')
@@ -36,7 +41,9 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id):
         msg_send = r'{"action": "upgrade_skill","time": 0,"ai_id": %d,"skill_type": "%s"}' % (ai_id, msg[1])
         enqueue_func(msg_send)
 
-    return ctypes.addressof(ctypes.create_string_buffer(bytes(msg_from_logic, encoding='ascii')))
+
+    set_string_value(string_buffer, msg_from_logic)
+    return ctypes.addressof(string_buffer)
 
 
 class AICore(object):
@@ -45,6 +52,7 @@ class AICore(object):
         self.id = ai_id
         self.path = path
         self.dll_main = self.load_dll_main()
+        self.c_string_buffer = ctypes.create_string_buffer(1000) # 1000 is a temp value
 
     def load_dll_main(self):
         # Load DLL main function
@@ -56,7 +64,7 @@ class AICore(object):
         def communicate(dll_message):
             # Also pass to dll_main
             assert isinstance(dll_message, bytes)
-            return communicate_with_dll(dll_message, enqueue_func, self.id)
+            return communicate_with_dll(dll_message, enqueue_func, self.id, self.c_string_buffer)
 
         c_communicate = ctypes.CFUNCTYPE(ctypes.c_char_p, ctypes.c_char_p)(communicate)
 
