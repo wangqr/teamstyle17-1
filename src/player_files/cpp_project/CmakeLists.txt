@@ -1,0 +1,2 @@
+PROJECT(ts17_ai)
+ADD_LIBRARY(ai SHARED "./ai/ai.cpp" ;"./ai/teamstyle17.h";"./ai/teamstyle17.cpp" ;"./communicate/basic.h";"./communicate/communicate.cpp" ;"./communicate/communicate.h" ;"./communicate/dll_main.cpp" ;"./communicate/picojson/picojson.h")

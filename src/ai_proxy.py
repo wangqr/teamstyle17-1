@@ -4,34 +4,39 @@
 # AI Proxy
 
 import ctypes
-import tempfile
-import action
 from threading import Thread, current_thread
 from multiprocessing import Process
 
+def communicate_with_dll(dll_message, enqueue_func, ai_id):
+    assert isinstance(dll_message, bytes)
 
-def update_info(enqueue_func, ai_id):
-    # TODO: Get sth from logic (send and get json strings?)
-    py_info = None
+    msg = str(dll_message)[2:-1].split(sep=' ')
 
-    # Convert info from Python string to C string
-    c_info = ctypes.create_string_buffer(b"UpdateInfo (sent by Python)")  # test
-    print(c_info.value)
-    return c_info  # C string
+    msg_from_logic = '********'  # 一个很奇怪的问题：用 C++ 读取 Python 传过来的长字符串的时候前 8 个字符会随机（目测）变成别的字符，所以用 * 替换掉...
 
+    if msg[0] == 'query_map':
+        msg_send = r'{"action": "query_map","time": 0,"ai_id": %d}' % ai_id
+        msg_from_logic += enqueue_func(msg_send)
 
-def get_action_from_cpp(enqueue_func, ai_id, c_action):
-    # TODO: c_action is a bytes string
+    if msg[0] == 'query_status':
+        msg_send = r'{"action": "query_status","time": 0,"ai_id": %d}' % ai_id
+        msg_from_logic += enqueue_func(msg_send)
 
-    assert isinstance(c_action, bytes)
-    ai_id = int(current_thread().name[-1])
-    print('Received a massage from ai %d (%s) :' % (ai_id, current_thread().name), c_action)  # test
+    if msg[0] == 'move':
+        msg_send = r'{"action": "move","time": 0,"ai_id": %d,"x": %d,"y": %d,"z": %d}' % (
+            ai_id, int(msg[1]), int(msg[2]), int(msg[3]))
+        enqueue_func(msg_send)
 
-    # c_action --> act
-    act = None
+    if msg[0] == 'use_skill':
+        msg_send = r'{"action": "use_skill","time": 0,"ai_id": %d,"skill_type": "%s","x": %d,"y": %d,"z": %d,"target": %d}' \
+                   % (ai_id, msg[1], int(msg[2]), int(msg[3]), int(msg[4]), int(msg[5]))
+        enqueue_func(msg_send)
 
-    # Send action to platform main thread
-    # enqueue_func(act)
+    if msg[0] == 'upgrade_skill':
+        msg_send = r'{"action": "upgrade_skill","time": 0,"ai_id": %d,"skill_type": "%s"}' % (ai_id, msg[1])
+        enqueue_func(msg_send)
+
+    return ctypes.addressof(ctypes.create_string_buffer(bytes(msg_from_logic, encoding='ascii')))
 
 
 class AICore(object):
@@ -48,21 +53,15 @@ class AICore(object):
         return dll_main
 
     def start_ai(self, enqueue_func):
-        def get_action(c_action):
-            # This function will be convert into a C function pointer and pass to dll_main
-            get_action_from_cpp(enqueue_func, self.id, c_action)
-
-        c_get_action = ctypes.CFUNCTYPE(None, ctypes.c_char_p)(get_action)
-
-        def update():
+        def communicate(dll_message):
             # Also pass to dll_main
-            info = update_info(enqueue_func, self.id)
-            return ctypes.addressof(info)
+            assert isinstance(dll_message, bytes)
+            return communicate_with_dll(dll_message, enqueue_func, self.id)
 
-        c_update = ctypes.CFUNCTYPE(ctypes.c_char_p)(update)  # return a c char pointer (C string)
+        c_communicate = ctypes.CFUNCTYPE(ctypes.c_char_p, ctypes.c_char_p)(communicate)
 
         # Start AI
-        self.dll_main(c_get_action, c_update, self.id)
+        self.dll_main(c_communicate, self.id)
 
 
 class AIThread(object):
@@ -95,9 +94,6 @@ def start(ai_paths, enqueue_func):
     assert isinstance(ai_paths, list)
 
     method = 'thread'
-
-    # TODO: Copy dll files to a temp dir and give each of them a unique file name
-
 
     # Create AI threads
     ai_threads = []
