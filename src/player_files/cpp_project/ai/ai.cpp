@@ -10,9 +10,9 @@ void AIMain() {
 	srand(clock());
 	int r = rand() % 5;
 	if (r == 0) {
-		UpdateMap();
+	//	UpdateMap();
 	} else if (r == 1) {
-		UpdateStatus();
+	//	UpdateStatus();
 	} else if (r == 2) {
 		Move({ 2, 3, 3 });
 	} else if (r == 3) {
