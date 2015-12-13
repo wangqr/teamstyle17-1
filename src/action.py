@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-#from core import sendInstruction
 import json
+import ai_proxy
 
 def sendInstruction(string):
     '''
@@ -15,19 +15,27 @@ def sendInstruction(string):
 '''
 
 class Action:
-    def __init__(self, ai_id, action_name, action_json):
+    def __init__(self, action_json, action_name = None):
         self.ai_id = ai_id
-        self.timestamp = 0
-        self.action_name = action_name
+        if (action_name):
+            self.action_name = action_name
+        else:
+            if (act["action"] in ["init", "move", "use_skill", "upgrade_skill"]):
+                self.action_name = 'instruction'
+            elif (act["action"] in ["query_map", "query_status"]):
+                self.action_name = 'query'
         self.action_json = action_json
     def run(self, logic):
-        act = json.loads(self.action_json)
-        if (act["action"] in ["init", "move", "use_skill", "upgrade_skill"]):
+        if (self.action_name == 'instruction'):
             logic.setInstruction(self.action_json)
-        elif (act["action"] in ["query_map", "query_status"]):
+        elif (self.action_name == 'query'):
             ret = logic.getInstruction(self.action_json)
-            'TODO'
-            pass
+            # TODO send back data
+            #ai_proxy.update_info(ret, self.ai_id)
+    def set_timestamp(time: int):
+        q = json.loads(self.action_json)
+        q['time'] = time
+        self.action_json = json.dumps(q)
 
 class QueryMap(Action):
     def __init__(self, ai_id):
