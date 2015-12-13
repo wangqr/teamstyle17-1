@@ -58,3 +58,6 @@ target/
 
 # Game replay
 *.rpy
+
+# PyCharm
+.idea/
