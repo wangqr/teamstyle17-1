@@ -61,13 +61,17 @@ def push_queue_ai_proxy(obj: str):
     action_queue.put((timestamp, action.Action(obj, action_name, ret)))
     ret_str = None
     if ret:
-        print('['+str(time.time() - game_start_time)+'] waiting for ret_str')
+        if __debug__:
+            print('['+str(time.time() - game_start_time)+'] waiting for ret_str')
         ret_str = ret.get(block=True)
-        print('['+str(time.time() - game_start_time)+'] core returned \''+str(ret_str)+'\'')
+        if __debug__:
+            print('['+str(time.time() - game_start_time)+'] core returned \''+str(ret_str)+'\'')
     return ret_str
 
 
 def main():
+    if __debug__:
+        print('__debug__ == ' + str(__debug__))
     args = docopt.docopt(__doc__, version = 'ts17-platform ' + __version__ + ' [ts17-core ver ' + ts17core.__version__ + ']')
     if args['run']:
         run_main(args)
@@ -87,7 +91,8 @@ class EndSignalGenerator (threading.Thread):
             current_time = time.time()
             if current_time - game_start_time > time_limit:
                 end_action = action.Action('{"action":"_platform"}', "_end", None)
-                print('['+str(time.time() - game_start_time)+'] put stop sig')
+                if __debug__:
+                    print('['+str(time.time() - game_start_time)+'] put stop sig')
                 action_queue.put((0, end_action))
                 return
             else:
@@ -123,7 +128,7 @@ def run_main(args: dict):
     # run_logger = logger.Run_Logger(init_json)
 
     if args['-t']:
-        time_limit = int(args['-t'])
+        time_limit = float(args['-t'])
 
     if time_limit > 0:
         EndSignalGenerator().start()
@@ -131,7 +136,8 @@ def run_main(args: dict):
     # main loop
     while game_started:
         next_action = action_queue.get(block=True)
-        print('['+str(time.time() - game_start_time)+'] \x1b[1;32m>>>>>>>>recv id=' + str(json.loads(next_action[1].action_json).get('ai_id')) +' ' + json.loads(next_action[1].action_json).get('action') + ' '+ next_action[1].action_name +'\x1b[m')
+        if __debug__:
+            print('['+str(time.time() - game_start_time)+'] \x1b[1;32m>>>>>>>> recv id=' + str(json.loads(next_action[1].action_json).get('ai_id')) +' ' + json.loads(next_action[1].action_json).get('action') + ' '+ next_action[1].action_name +'\x1b[m')
         if next_action[1].action_name == '_pause':
             if args['-d']:
                 if game_paused:
@@ -144,7 +150,8 @@ def run_main(args: dict):
                 print('illegal action: pause')
             continue
         elif next_action[1].action_name == '_end':
-            print('['+str(time.time() - game_start_time)+'] \x1b[1;33mstop sig detected\x1b[m')
+            if __debug__:
+                print('['+str(time.time() - game_start_time)+'] \x1b[1;33mstop sig detected\x1b[m')
             break
         if next_action[0] > last_action_timestamp:
             last_action_timestamp = next_action[0]
@@ -155,9 +162,11 @@ def run_main(args: dict):
             # run_logger.log_action(next_action[1])
             pass
         next_action[1].run(main_logic)
-        print('['+str(time.time() - game_start_time)+'] \x1b[1;32m<<<<<<<<fin ' + next_action[1].action_json +'\x1b[m')
+        if __debug__:
+            print('['+str(time.time() - game_start_time)+'] \x1b[1;32m<<<<<<<< fin ' + next_action[1].action_json +'\x1b[m')
     # ai_proxy.stopAI()
-    print('['+str(time.time() - game_start_time)+'] \x1b[1;31mquit\x1b[m')
+    if __debug__:
+        print('['+str(time.time() - game_start_time)+'] \x1b[1;31mquit\x1b[m')
     os.kill(os.getpid(), signal.SIGTERM)
 
 
