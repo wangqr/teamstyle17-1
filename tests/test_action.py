@@ -8,21 +8,21 @@ from src import action
 
 
 class LogicProxy:
-        def __init__(self):
-            self.queue = []
+    def __init__(self):
+        self.queue = []
 
-        def setInstruction(self, action_json):
-            try:
-                self.queue.append(json.loads(action_json))
-            except Exception:
-                pass
+    def setInstruction(self, action_json):
+        try:
+            self.queue.append(json.loads(action_json))
+        except Exception:
+            pass
 
-        def getInstruction(self, action_json):
-            try:
-                self.queue.append(json.loads(action_json))
-            except Exception:
-                pass
-            return '{}'
+    def getInstruction(self, action_json):
+        try:
+            self.queue.append(json.loads(action_json))
+        except Exception:
+            pass
+        return '{}'
 
 
 class TestAction:
