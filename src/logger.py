@@ -70,7 +70,7 @@ class Replay_Logger:
 		# action_list[0] is the initialization action
 		# ??? Object of class 'Interface'?
 		# ??? 'setInstruction' should include logic_id
-		setInstruction（self.action_list[0])
+		setInstruction(self.action_list[0])
 		action_id = 1 			
 		while (action_id < self.action_count) and (self.action_list[action_id]['time'] < init_time):
 			# Object of class 'Interface'?
