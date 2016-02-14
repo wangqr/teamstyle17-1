@@ -83,6 +83,57 @@ def main():
         docopt.docopt(__doc__, argv=['-h'])
 
 
+class Timer:
+    def __init__(self):
+        self.next_action_tm = None
+        self.next_action_event = None
+        self.start_time = None
+        self.offset = 0
+        self.running = False
+        self.timer = None
+        self.mutex =
+
+    def get_time(self):
+        if self.running:
+            return time.time() - self.start_time + self.offset
+        else:
+            return self.offset
+
+    def start(self):
+        if not self.running:
+            self.start_time = time.time()
+            self.
+            self.running = True
+
+    def stop(self):
+        if self.timer is not None:
+            self.timer.cancel()
+        self.offset = self.get_time()
+        self.running = False
+
+    def set_time(self, tm):
+        if self.running:
+            self.start_time = time() - tm
+        else:
+            self.offset = tm
+
+    def add_action(self, tm, event):
+        if self.timer is not None:
+            self.timer.cancel()
+        delay = self.get_time() - tm
+        if delay < 0:
+            event()
+        else:
+            self.timer = threading.Timer(delay, self.handle_event)
+            self.timer.start()
+            next_action_tm = tm
+            self.next_action_event = event
+
+    def handle_event(self):
+        self.timer = None
+        self.event()
+
+
 class EndSignalGenerator (threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
