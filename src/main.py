@@ -29,6 +29,7 @@ import threading
 
 import ai_proxy
 import action
+import uiobj
 #   Bug remain
 # import logger
 
@@ -42,6 +43,7 @@ game_start_time = 0
 game_paused = False
 game_pause_time = 0
 time_limit = 0
+game_uiobj = None
 
 
 def push_queue_ai_proxy(obj: str):
@@ -105,6 +107,7 @@ def run_main(args: dict):
     global game_pause_time
     global time_limit
     global game_paused
+    global game_uiobj
 
     last_action_timestamp = 0
 
@@ -118,7 +121,7 @@ def run_main(args: dict):
     ai_proxy.start(args['<ai>'], push_queue_ai_proxy)
 
     #   init ui
-    # TODO
+    game_uiobj = uiobj.UIObject(push_queue_ai_proxy, ai_id = -1)
 
     #   get init action
     init_json = '{"action":"init","seed":' + str(random.randrange(0,4294967296)) + '}'
