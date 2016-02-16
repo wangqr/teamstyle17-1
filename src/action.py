@@ -21,8 +21,8 @@ class Action:
             try:
                 ret = logic.getInstruction(self.action_json)
             except Exception as e:
-                print('[ERROR] \x1b[1;31mlogic exception '+type(e).__name__+'\x1b[m')
-                ret = '{"message": "logic exception '+type(e).__name__+'"}'
+                print('[ERROR] \x1b[1;31mlogic exception ' + type(e).__name__ + ' [' + str(e) + ']\x1b[m')
+                ret = '{"message": "logic exception ' + type(e).__name__ + ' [' + str(e) + '"]}'
             self.return_queue.put(ret)
 
     def set_timestamp(self, time: int):

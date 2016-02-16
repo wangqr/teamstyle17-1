@@ -12,16 +12,28 @@ class SocketThread(threading.Thread):
         self.clientaddress = None
         self.queue_function = queue_function
         self.bufsize = bufsize
-        print ('SocketThread init OK.')
 
     def run(self):
-        self.clientsocket, self.clientaddress = self.socket.accept()
-        print('Established connection from ' + str(self.clientaddress))
         while 1: # TODO while not game.stopped:
-            data = self.clientsocket.recv(self.bufsize).decode()
-            ret = self.queue_function(data)
-            if ret is not None:
-                self.clientsocket.send(ret.encode())
+            self.clientsocket, self.clientaddress = self.socket.accept()
+            if __debug__:
+                print('[INFO] platform (UI) Established connection from ' + str(self.clientaddress))
+            while 1:
+                try:
+                    data = self.clientsocket.recv(self.bufsize).decode()
+                except UnicodeDecodeError as e:
+                    print('[ERROR] \x1b[1;31mplatform (UI) exception ' + type(e).__name__ + ' [' + str(e) + ']\x1b[m')
+                    ret = '{"message": "platform (UI) exception ' + type(e).__name__ + ' [' + str(e) + '"]}'
+                    data = None
+                if data == '':
+                    self.clientsocket.close()
+                    if __debug__:
+                        print('[INFO] platform (UI) Connection reset by peer.')
+                    break
+                if data is not None:
+                    ret = self.queue_function(data)
+                if ret is not None:
+                    self.clientsocket.send(ret.encode())
 
 class UIObject:
     def __init__(self, queue_function, host = 'localhost', port = 6000, backlog = 1, ai_id = -1):
