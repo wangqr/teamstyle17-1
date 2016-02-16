@@ -21,7 +21,7 @@ class SocketThread(threading.Thread):
             data = self.clientsocket.recv(self.bufsize).decode()
             ret = self.queue_function(data)
             if ret is not None:
-                clientsocket.send(ret.encode())
+                self.clientsocket.send(ret.encode())
 
 class UIObject:
     def __init__(self, queue_function, host = 'localhost', port = 6000, backlog = 1, ai_id = -1):
