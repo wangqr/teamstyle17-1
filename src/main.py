@@ -38,20 +38,77 @@ import ts17core.interface
 
 __version__ = '0.1-a'
 
+
+class Timer:
+    def __init__(self, func=time.perf_counter):
+        self.elapsed = 0.0
+        self._func = func
+        self._start = None
+
+    def start(self):
+        if self._start is None:
+            self._start = self._func()
+
+    def stop(self):
+        if self._start is not None:
+            end = self._func()
+            self.elapsed += end - self._start
+            self._start = None
+
+    def reset(self):
+        self.elapsed = 0.0
+
+    @property
+    def running(self):
+        return self._start is not None
+
+    @running.setter
+    def running(self, value: bool):
+        if value:
+            self.start()
+        else:
+            self.stop()
+
+    @property
+    def current_time(self):
+        return self.elapsed if self._start is None else self.elapsed + self._func() - self._start
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, *_):
+        self.stop()
+
+
+class EndSignalGenerator (threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+
+    def run(self):
+        global action_queue
+        global game_timer
+        while 1:
+            if game_timer.current_time > time_limit:
+                end_action = action.Action('{"action":"_platform"}', "_end", None)
+                if __debug__:
+                    print('['+str(game_timer.current_time)+'] put stop sig')
+                action_queue.put((0, end_action))
+                return
+            else:
+                time.sleep((time_limit - game_timer.current_time))
+
+
 action_queue = queue.PriorityQueue()
-game_start_time = 0
-game_paused = False
-game_pause_time = 0
+game_timer = Timer()
 time_limit = 0
 game_uiobj = None
 
 
 def push_queue_ai_proxy(obj: str):
     global action_queue
-    global game_start_time
-    timestamp = time.time() - game_start_time
-    if game_paused:
-        timestamp = game_pause_time - game_start_time
+    global game_timer
+    timestamp = game_timer.current_time
     act = json.loads(obj).get('action')
     action_name = None
     ret = None
@@ -64,10 +121,10 @@ def push_queue_ai_proxy(obj: str):
     ret_str = None
     if ret:
         if __debug__:
-            print('['+str(time.time() - game_start_time)+'] waiting for ret_str')
+            print('['+str(game_timer.current_time)+'] waiting for ret_str')
         ret_str = ret.get(block=True)
         if __debug__:
-            print('['+str(time.time() - game_start_time)+'] core returned \''+str(ret_str)+'\'')
+            print('['+str(game_timer.current_time)+'] core returned \''+str(ret_str)+'\'')
     return ret_str
 
 
@@ -83,81 +140,10 @@ def main():
         docopt.docopt(__doc__, argv=['-h'])
 
 
-class Timer:
-    def __init__(self):
-        self.next_action_tm = None
-        self.next_action_event = None
-        self.start_time = None
-        self.offset = 0
-        self.running = False
-        self.timer = None
-        self.mutex =
-
-    def get_time(self):
-        if self.running:
-            return time.time() - self.start_time + self.offset
-        else:
-            return self.offset
-
-    def start(self):
-        if not self.running:
-            self.start_time = time.time()
-            self.
-            self.running = True
-
-    def stop(self):
-        if self.timer is not None:
-            self.timer.cancel()
-        self.offset = self.get_time()
-        self.running = False
-
-    def set_time(self, tm):
-        if self.running:
-            self.start_time = time() - tm
-        else:
-            self.offset = tm
-
-    def add_action(self, tm, event):
-        if self.timer is not None:
-            self.timer.cancel()
-        delay = self.get_time() - tm
-        if delay < 0:
-            event()
-        else:
-            self.timer = threading.Timer(delay, self.handle_event)
-            self.timer.start()
-            next_action_tm = tm
-            self.next_action_event = event
-
-    def handle_event(self):
-        self.timer = None
-        self.event()
-
-
-class EndSignalGenerator (threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-
-    def run(self):
-        global action_queue
-        while 1:
-            current_time = time.time()
-            if current_time - game_start_time > time_limit:
-                end_action = action.Action('{"action":"_platform"}', "_end", None)
-                if __debug__:
-                    print('['+str(time.time() - game_start_time)+'] put stop sig')
-                action_queue.put((0, end_action))
-                return
-            else:
-                time.sleep((game_start_time + time_limit - current_time)*0.61803398874989484820458683436564)
-
-
 def run_main(args: dict):
     global action_queue
-    global game_start_time
-    global game_pause_time
+    global game_timer
     global time_limit
-    global game_paused
     global game_uiobj
 
     last_action_timestamp = 0
@@ -166,7 +152,6 @@ def run_main(args: dict):
     main_logic = ts17core.interface.Interface()
 
     game_started = True
-    game_start_time = time.time()
 
     # init ai_proxy
     ai_proxy.start(args['<ai>'], push_queue_ai_proxy)
@@ -187,25 +172,21 @@ def run_main(args: dict):
     if time_limit > 0:
         EndSignalGenerator().start()
 
+    game_timer.start()
     # main loop
     while game_started:
         next_action = action_queue.get(block=True)
         if __debug__:
-            print('['+str(time.time() - game_start_time)+'] \x1b[1;32m>>>>>>>> recv id=' + str(json.loads(next_action[1].action_json).get('ai_id')) +' ' + json.loads(next_action[1].action_json).get('action') + ' '+ next_action[1].action_name +'\x1b[m')
+            print('['+str(game_timer.current_time)+'] \x1b[1;32m>>>>>>>> recv id=' + str(json.loads(next_action[1].action_json).get('ai_id')) +' ' + json.loads(next_action[1].action_json).get('action') + ' '+ next_action[1].action_name +'\x1b[m')
         if next_action[1].action_name == '_pause':
             if args['-d']:
-                if game_paused:
-                    game_start_time += time.time() - game_pause_time
-                    game_paused = False
-                else:
-                    game_pause_time = time.time()
-                    game_paused = True
+                game_timer.running = not game_timer.running
             else:
                 print('illegal action: pause')
             continue
         elif next_action[1].action_name == '_end':
             if __debug__:
-                print('['+str(time.time() - game_start_time)+'] \x1b[1;33mstop sig detected\x1b[m')
+                print('['+str(game_timer.current_time)+'] \x1b[1;33mstop sig detected\x1b[m')
             break
         if next_action[0] > last_action_timestamp:
             last_action_timestamp = next_action[0]
@@ -217,10 +198,10 @@ def run_main(args: dict):
             pass
         next_action[1].run(main_logic)
         if __debug__:
-            print('['+str(time.time() - game_start_time)+'] \x1b[1;32m<<<<<<<< fin ' + next_action[1].action_json +'\x1b[m')
+            print('['+str(game_timer.current_time)+'] \x1b[1;32m<<<<<<<< fin ' + next_action[1].action_json +'\x1b[m')
     # ai_proxy.stopAI()
     if __debug__:
-        print('['+str(time.time() - game_start_time)+'] \x1b[1;31mquit\x1b[m')
+        print('['+str(game_timer.current_time)+'] \x1b[1;31mquit\x1b[m')
     os.kill(os.getpid(), signal.SIGTERM)
 
 
