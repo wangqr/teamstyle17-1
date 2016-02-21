@@ -1,22 +1,21 @@
 ﻿#include "teamstyle17.h"
 #include <iostream>
-#include <random>
 #include <time.h>
+#include <random>
 
 using namespace std;
 
 void AIMain() {
-    // Write your AI codes here :-)
-	srand(clock());
 	int r = rand() % 5;
 	if (r == 0) {
-	//	UpdateMap();
+		UpdateMap();
 	} else if (r == 1) {
-	//	UpdateStatus();
+		UpdateStatus();
 	} else if (r == 2) {
 		Move({ 2, 3, 3 });
 	} else if (r == 3) {
-		UseSkill(SkillType(rand() % kSkillTypes), { 2, 3, 3 }, rand() % 233);
+		Position des = { 2, 3, 3 };
+		UseSkill(SkillType(rand() % kSkillTypes), des);
 	} else {
 		UpgradeSkill(SkillType(rand() % kSkillTypes));
 	}

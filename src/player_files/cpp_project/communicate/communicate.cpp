@@ -6,13 +6,13 @@
 #include "basic.h"
 #include "communicate.h"
 
-const int kMaxMessageLength = 200;
+const int kMaxMessageLength = 10000;
 
 MapInfo MAP;
 PlayerStatus STATUS;
 
 // 以下是平台用
-
+/*
 void SetElement(int index, picojson::object &obj) {
 	MAP.elements[index].id = obj["id"].get<double>();
 	MAP.elements[index].radius = obj["r"].get<double>();
@@ -43,19 +43,26 @@ void LoadMapInfo(const char *info_str) { // 解析
 	}
 }
 
-void LoadPlayerStatus(const char *status_str) {
+*/
+
+void LoadMapInfo(const char *info_str) {
 	// TODO
+	// printf("%s\n", info_str);
 }
 
+void LoadPlayerStatus(const char *status_str) {
+	// TODO
+	// printf("%s\n", status_str);
+}
 
-// 以下是选手用，ai_id 会在平台 AI Proxy 中填写，time 在平台主进程中填写
+// 以下是选手用
 
 const MapInfo *UpdateMap() {
 	char msg_send[kMaxMessageLength];
 	sprintf(msg_send, "query_map");
 
 	char msg_receive[kMaxMessageLength];
-	strcpy(msg_receive, Communicate(msg_send) + 8);
+	strcpy(msg_receive, Communicate(msg_send));
 
 	LoadMapInfo(msg_receive);
 	return &MAP;
@@ -66,7 +73,7 @@ const PlayerStatus *UpdateStatus() {
 	sprintf(msg_send, "query_status");
 
 	char msg_receive[kMaxMessageLength];
-	strcpy(msg_receive, Communicate(msg_send) + 8);
+	strcpy(msg_receive, Communicate(msg_send));
 
 	LoadPlayerStatus(msg_receive);
 	return &STATUS;
@@ -78,15 +85,15 @@ void Move(Position des) {
 	Communicate(msg_send);
 }
 
-void UseSkill(SkillType skill, Position des, int target=0) {
+void UseSkill(SkillType skill, Position des) {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "use_skill %s %d %d %d %d", SkillName[skill], des.x, des.y, des.z, target);
+	sprintf(msg_send, "use_skill %d %d %d %d", skill, des.x, des.y, des.z);
 	Communicate(msg_send);
 }
 
 void UpgradeSkill(SkillType skill) {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "upgrade_skill %s", SkillName[skill]);
+	sprintf(msg_send, "upgrade_skill %d", skill);
 	Communicate(msg_send);
 }
 

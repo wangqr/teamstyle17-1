@@ -1,72 +1,65 @@
-﻿// 在这里定义选手用到的结构体 & 参数设置 & 依然不知道现在有哪些选手可见的参数...
+﻿// 主要参数与结构体的定义
 
 #ifndef BASIC_H_
 #define BASIC_H_
 
-const int kMaxSkillLevel = 5; // 同上
+const int kMaxSkillLevel = 5;
+const int kMapSize = 10000;
+const int kMaxObjectsNumber = 1000;
 
-enum ElementType {
+// 以下根据逻辑的代码 gamemain.py
+
+enum ObjectType {
 	PLAYER,
 	FOOD,
-	// 中立生物？ 刺球？
-	kUnitTypes
+	NUTRIENT,
+	SPIKE,
+	TARGET,
+	BULLET,
+	kObjectTypes
 };
 
 enum SkillType {
-	SHEILD, // 还有哪些技能？以及它们的名字？
-	FIREBALL,
+	LONG_ATTACK,
+	SHORT_ATTACK,
+	SHIELD,
+	TELEPORT,
+	VISION_UP,
+	HEALTH_UP,
 	kSkillTypes
 };
 
-const char SkillName[kSkillTypes][10] = { // 上面东西的字符串
-	"SHEILD",
-	"FIREBALL"
-};
+// 技能参数
+// int kSkillProperty[kSkillTypes][kMaxSkillLevel];
 
-
-struct Position {  // 以及这个要改成 double...
+struct Position {
 	int x;
 	int y;
 	int z;
 };
 
-struct Element {
-	int id;
-	int team;
-	ElementType type;
+struct Object {
+	int id;  // 多个 object 可能共用一个 id
+	ObjectType type;
 	Position pos;
 	int radius;
 };
 
-struct SkillProperty {
-
-};
-
-struct Skill {
-	SkillType type;
-	int level;
-	// int cd; 如果有的话..
-};
-
-struct PlayerStatus {
+struct PlayerStatus { // 根据逻辑 getStatusJson
 	int id;
 	int health;
-	// int max_health; 似乎应该是要给出来的数据吧..
 	int vision;
-	int ability;
-	Skill skills[kSkillTypes];
+	int ability; // 技能点
+	int skillLevel[kSkillTypes];
 };
 
-
-const int kMaxElementNumber = 200; // 随手写的..
 
 struct MapInfo {
-	int my_team;
-	// int time; 不返回当前时间很不科学..
-	PlayerStatus my_status;
-	Element elements[kMaxElementNumber];
-	int elements_list_size;
+	int player_id;
+	int time;
+	PlayerStatus player_status;
+	Object objects[kMaxObjectsNumber];
+	int objects_list_size;
 };
-
 
 #endif

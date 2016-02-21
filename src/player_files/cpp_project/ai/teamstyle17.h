@@ -11,7 +11,7 @@ const PlayerStatus *UpdateStatus();
 
 void Move(Position des);
 
-void UseSkill(SkillType skill, Position des, int target);
+void UseSkill(SkillType skill, Position des = { -1, -1, -1 }); // des 仅对 teleport 适用
 
 void UpgradeSkill(SkillType skill);
 

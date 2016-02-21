@@ -25,10 +25,7 @@ DLLEXPORT void StartAI(ComFuncType communicate, int ai_id) {
 
 	Communicate = communicate;
 
-//	int i = 0;
-
 	while (true) {
 		AIMain();   // Start AI
-		SLEEP(100);
 	}
 }
