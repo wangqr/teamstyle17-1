@@ -9,6 +9,6 @@
 extern int AI_ID; // 实际上应该没用
 
 typedef char *(*ComFuncType)(char*);
-extern ComFuncType Communicate; // 向平台发送一个 json 串并从平台接收一个 json 串
+extern ComFuncType Communicate; // 向平台发送一个字符串并从平台接收一个字符串
 
 # endif

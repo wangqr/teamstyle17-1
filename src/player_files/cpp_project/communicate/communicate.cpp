@@ -97,3 +97,12 @@ void UpgradeSkill(SkillType skill) {
 	Communicate(msg_send);
 }
 
+#ifdef DEBUG_
+
+void PAUSE() {
+	char msg_send[kMaxMessageLength];
+	sprintf(msg_send, "pause");
+	Communicate(msg_send);
+}
+
+#endif

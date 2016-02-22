@@ -32,6 +32,9 @@ enum SkillType {
 // 技能参数
 // int kSkillProperty[kSkillTypes][kMaxSkillLevel];
 
+// 技能升级开销
+int kSkillPrice[kSkillTypes][kMaxSkillLevel];
+
 struct Position {
 	int x;
 	int y;
@@ -39,17 +42,17 @@ struct Position {
 };
 
 struct Object {
-	int id;  // 多个 object 可能共用一个 id
+	int id;
 	ObjectType type;
 	Position pos;
 	int radius;
 };
 
-struct PlayerStatus { // 根据逻辑 getStatusJson
+struct PlayerStatus {  // 根据逻辑 getStatusJson
 	int id;
 	int health;
 	int vision;
-	int ability; // 技能点
+	int ability;  // 技能点
 	int skillLevel[kSkillTypes];
 };
 

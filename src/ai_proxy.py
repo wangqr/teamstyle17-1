@@ -21,7 +21,7 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
 
     action_name, *msg = str(dll_message)[2:-1].split(sep=' ')
     msg_from_logic = ''
-    skill_types = ['longAttack', 'shortAttack', 'shield', 'teleport', 'visionUp', 'healthUp']  # 驼峰还是下划线?
+    skill_types = ['longAttack', 'shortAttack', 'shield', 'teleport', 'visionUp', 'healthUp']
 
     if action_name in ['query_map', 'query_status']:
         msg_send = r'{"action": "%s","time": 0,"ai_id": %d}' % (action_name, ai_id)
@@ -40,6 +40,9 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
     elif action_name == 'upgrade_skill' and 0 <= int(msg[0]) < len(skill_types):
         msg_send = r'{"action": "upgrade_skill","time": 0,"ai_id": %d,"skill_type": "%s"}' % (ai_id, skill_types[int(msg[0])])
         enqueue_func(msg_send)
+
+    elif action_name == 'pause':
+        pass
 
     set_string_value(string_buffer, msg_from_logic)
     return ctypes.addressof(string_buffer)

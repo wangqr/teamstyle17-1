@@ -21,11 +21,12 @@ ComFuncType Communicate;
 void AIMain();
 
 DLLEXPORT void StartAI(ComFuncType communicate, int ai_id) {
-	// 用它来启动 ai
 
 	Communicate = communicate;
 
 	while (true) {
-		AIMain();   // Start AI
+		AIMain();   // 启动 AI
 	}
+
+	SLEEP(100);
 }

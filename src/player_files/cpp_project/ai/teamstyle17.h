@@ -11,8 +11,14 @@ const PlayerStatus *UpdateStatus();
 
 void Move(Position des);
 
-void UseSkill(SkillType skill, Position des = { -1, -1, -1 }); // des 仅对 teleport 适用
+void UseSkill(SkillType skill, Position des = { -1, -1, -1 }); // des 仅对 teleport 和 long attack 适用
 
 void UpgradeSkill(SkillType skill);
+
+#ifdef DEBUG_
+
+void PAUSE(); // 未来调试用
+
+#endif
 
 #endif
