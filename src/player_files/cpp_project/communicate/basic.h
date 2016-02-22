@@ -30,10 +30,10 @@ enum SkillType {
 };
 
 // 技能参数
-// int kSkillProperty[kSkillTypes][kMaxSkillLevel];
+// const int kSkillProperty[kSkillTypes][kMaxSkillLevel] = {0};
 
 // 技能升级开销
-int kSkillPrice[kSkillTypes][kMaxSkillLevel];
+const int kSkillPrice[kSkillTypes][kMaxSkillLevel] = {0};
 
 struct Position {
 	int x;
@@ -52,7 +52,7 @@ struct PlayerStatus {  // 根据逻辑 getStatusJson
 	int id;
 	int health;
 	int vision;
-	int ability;  // 技能点
+	int ability; // 技能点
 	int skillLevel[kSkillTypes];
 };
 

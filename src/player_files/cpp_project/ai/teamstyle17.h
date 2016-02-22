@@ -3,7 +3,7 @@
 #ifndef TEAMSTYLE17_H_
 #define TEAMSTYLE17_H_
 
-# include "../communicate/basic.h"
+#include "../communicate/basic.h"
 
 const MapInfo *UpdateMap();
 
