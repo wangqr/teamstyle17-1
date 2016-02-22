@@ -53,14 +53,14 @@ def push_queue_ai_proxy(obj: str):
     if game_paused:
         timestamp = game_pause_time - game_start_time
     act = json.loads(obj).get('action')
-    action_name = None
     ret = None
     if act in ["init", "move", "use_skill", "upgrade_skill"]:
-        action_name = 'instruction'
+        action_queue.put((timestamp, action.Action(obj, 'instruction', None)))
     elif act in ["query_map", "query_status"]:
-        action_name = 'query'
         ret = queue.Queue()
-    action_queue.put((timestamp, action.Action(obj, action_name, ret)))
+        action_queue.put((timestamp, action.Action(obj, 'query', ret)))
+    elif act and act[0] == '_':
+        action_queue.put((0, action.Action('{"action":"_platform"}', act, None)))
     ret_str = None
     if ret:
         if __debug__:

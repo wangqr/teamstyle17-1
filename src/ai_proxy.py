@@ -42,7 +42,8 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
         enqueue_func(msg_send)
 
     elif action_name == 'pause':
-        pass
+        msg_send = r'{"action": "_pause","ai_id": %d}' % ai_id
+        enqueue_func(msg_send)
 
     set_string_value(string_buffer, msg_from_logic)
     return ctypes.addressof(string_buffer)
