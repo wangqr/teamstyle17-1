@@ -1,22 +1,15 @@
 ﻿#include "teamstyle17.h"
-#include <iostream>
-#include <time.h>
-#include <random>
-
-using namespace std;
+#include<random>
 
 void AIMain() {
-	int r = rand() % 5;
-	if (r == 0) {
-		UpdateMap();
-	} else if (r == 1) {
-		UpdateStatus();
-	} else if (r == 2) {
-		Move({ 2, 3, 3 });
-	} else if (r == 3) {
-		Position des = { 2, 3, 3 };
-		UseSkill(SkillType(rand() % kSkillTypes), des);
-	} else {
-		UpgradeSkill(SkillType(rand() % kSkillTypes));
+	int i = rand() % 5;
+	const MapInfo *map = NULL;
+	const PlayerStatus *status = NULL;
+	switch (i) {
+	case 0:map = UpdateMap(); break;
+	case 1:status = UpdateStatus(); break;
+	case 2:UseSkill(SkillType(rand() % kSkillTypes), { 2, 3, 3 }); break;
+	case 3:UpgradeSkill(SkillType(rand() % kSkillTypes)); break;
+	default:Move({ 6, 6, 6 });
 	}
 }

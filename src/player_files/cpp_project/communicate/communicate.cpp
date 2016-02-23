@@ -1,6 +1,6 @@
-﻿// 跟通信有关的函数定义 & json 解析
+﻿// 跟通信有关的函数定义
 
-#include <stdio.h>  // sprintf
+#include <stdio.h>
 #include <string.h>
 #include <string>
 #include "basic.h"
@@ -8,51 +8,37 @@
 
 const int kMaxMessageLength = 10000;
 
-MapInfo MAP;
-PlayerStatus STATUS;
+MapInfo MAP_;
+PlayerStatus STATUS_;
 
 // 以下是平台用
-/*
-void SetElement(int index, picojson::object &obj) {
-	MAP.elements[index].id = obj["id"].get<double>();
-	MAP.elements[index].radius = obj["r"].get<double>();
 
-	std::string type = obj["type"].get<std::string>();
-	if (type == "food") MAP.elements[index].type = FOOD;
-	if (type == "player") MAP.elements[index].type = PLAYER; // ...
-
-	picojson::array pos = obj["pos"].get<picojson::array>();
-	MAP.elements[index].pos.x = pos[0].get<double>();
-	MAP.elements[index].pos.y = pos[1].get<double>();
-	MAP.elements[index].pos.z = pos[2].get<double>();
-}
-
-void LoadMapInfo(const char *info_str) { // 解析
-	picojson::value val;
-	picojson::parse(val, info_str);
-
-	picojson::array objects = val.get("objects").get<picojson::array>();
-
-	MAP.elements_list_size = objects.size();
-
-	picojson::array::iterator it = objects.begin();
-	while (it != objects.end()) {
-		picojson::object obj = it->get<picojson::object>();
-		SetElement(it - objects.begin(), obj);
-		++it;
+void LoadMapInfo(char *info_str) {
+	int st = 0, ed = 0, object_counter = 0;
+	while (info_str[ed] != 0) {
+		if (info_str[ed] == ';') {  // 不同 Object 的数据以 ';' 分隔
+			info_str[ed] = 0;
+			sscanf(info_str + st, "%d%d%d%d%d%d", &MAP_.objects[object_counter].id, &MAP_.objects[object_counter].type,
+				&MAP_.objects[object_counter].pos.x, &MAP_.objects[object_counter].pos.y, &MAP_.objects[object_counter].pos.z,
+				&MAP_.objects[object_counter].radius);
+			++object_counter;
+			st = ed + 1;
+		}
+		++ed;
 	}
+	if (ed > st) {
+		sscanf(info_str + st, "%d%d%d%d%d%d", &MAP_.objects[object_counter].id, &MAP_.objects[object_counter].type,
+			&MAP_.objects[object_counter].pos.x, &MAP_.objects[object_counter].pos.y, &MAP_.objects[object_counter].pos.z,
+			&MAP_.objects[object_counter].radius);
+		++object_counter;
+	}
+	MAP_.objects_list_size = object_counter;
 }
 
-*/
-
-void LoadMapInfo(const char *info_str) {
-	// TODO
-	// printf("%s\n", info_str);
-}
-
-void LoadPlayerStatus(const char *status_str) {
-	// TODO
-	// printf("%s\n", status_str);
+void LoadPlayerStatus(char *status_str) {
+	sscanf(status_str, "%d%d%d%d%d%d%d%d%d%d", &STATUS_.id, &STATUS_.health, &STATUS_.vision, &STATUS_.ability,
+		&STATUS_.skill_level[0], &STATUS_.skill_level[1], &STATUS_.skill_level[2],
+		&STATUS_.skill_level[3], &STATUS_.skill_level[4], &STATUS_.skill_level[5]);
 }
 
 // 以下是选手用
@@ -65,7 +51,7 @@ const MapInfo *UpdateMap() {
 	strcpy(msg_receive, Communicate(msg_send));
 
 	LoadMapInfo(msg_receive);
-	return &MAP;
+	return &MAP_;
 }
 
 const PlayerStatus *UpdateStatus() {
@@ -76,7 +62,7 @@ const PlayerStatus *UpdateStatus() {
 	strcpy(msg_receive, Communicate(msg_send));
 
 	LoadPlayerStatus(msg_receive);
-	return &STATUS;
+	return &STATUS_;
 }
 
 void Move(Position des) {
@@ -97,12 +83,8 @@ void UpgradeSkill(SkillType skill) {
 	Communicate(msg_send);
 }
 
-#ifdef DEBUG_
-
 void PAUSE() {
 	char msg_send[kMaxMessageLength];
 	sprintf(msg_send, "pause");
 	Communicate(msg_send);
 }
-
-#endif
