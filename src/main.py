@@ -167,10 +167,12 @@ class Game:
         self._logic.setInstruction(init_json)
         self._queue = queue.PriorityQueue()
         self._last_action_timestamp = 0
+        self.__action_count = 0
         if not start_paused:
             self._timer.start()
         if time_limit:
             EndSignalGenerator(game_obj=self, time_limit=time_limit).start()
+        self.__mutex = threading.Lock()
 
     @property
     def seed(self) -> int:
@@ -179,11 +181,11 @@ class Game:
     def mainloop(self):
         while 1:
             next_action = self._queue.get(block=True)
-            self._logger.debug('>>>>>>>> recv %s', next_action[1].action_json or '')
-            if next_action[1].action_name == '_pause':
+            self._logger.debug('>>>>>>>> recv %s', next_action[2].action_json or '')
+            if next_action[2].action_name == '_pause':
                 self._timer.running = not self._timer.running
                 continue
-            elif next_action[1].action_name == '_end':
+            elif next_action[2].action_name == '_end':
                 self._logger.info('stop signal received')
                 break
             if self._time_limit and next_action[0] > self._time_limit:
@@ -194,15 +196,18 @@ class Game:
                     ret = self._logic.nextTick()
                     self._last_action_timestamp += 1
                 self._info_callback(ret)
-            next_action[1].set_timestamp(self._last_action_timestamp)
-            if next_action[1].action_name != 'query':
-                # run_logger.log_action(next_action[1])
+            next_action[2].set_timestamp(self._last_action_timestamp)
+            if next_action[2].action_name != 'query':
+                # run_logger.log_action(next_action[2])
                 pass
-            next_action[1].run(self._logic)
+            next_action[2].run(self._logic)
             self._logger.debug('<<<<<<<< fin')
 
     def enqueue(self, timestamp, act):
-        self._queue.put((timestamp, act))
+        self.__mutex.acquire()
+        self._queue.put((timestamp, self.__action_count, act))
+        self.__action_count += 1
+        self.__mutex.release()
 
     @property
     def current_time(self) -> float:
@@ -228,7 +233,7 @@ def push_queue_ai_proxy(obj: str, game_obj: Game):
         ret = queue.Queue()
         game_obj.enqueue(timestamp, action.Action(obj, 'query', ret))
     elif act and act[0] == '_':
-        game_obj.enqueue(0, action.Action('{"action":"_platform"}', act, None))
+        game_obj.enqueue(float(0.), action.Action('{"action":"_platform"}', act, None))
     ret_str = None
     if ret:
         root_logger.debug('waiting for ret_str')
