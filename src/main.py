@@ -181,7 +181,7 @@ class Game:
             next_action = self._queue.get(block=True)
             self._logger.debug('>>>>>>>> recv %s', next_action[1].action_json or '')
             if next_action[1].action_name == '_pause':
-                game_timer.running = not game_timer.running
+                self._timer.running = not self._timer.running
                 continue
             elif next_action[1].action_name == '_end':
                 self._logger.info('stop signal received')
@@ -213,8 +213,6 @@ class Game:
         return int(timestamp)
 
 
-action_queue = queue.PriorityQueue()
-game_timer = Timer()
 game_uiobj = None
 root_logger = Logging()
 
@@ -252,8 +250,6 @@ def main():
 
 
 def run_main(args: dict):
-    global action_queue
-    global game_timer
     global game_uiobj
 
     game_obj = Game(time_limit=float(args['-t'] or 0), seed=args['-s'])
