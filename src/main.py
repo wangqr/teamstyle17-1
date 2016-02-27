@@ -152,7 +152,7 @@ class Logging:
 
 
 class Game:
-    def __init__(self, time_limit=0., seed=None, info_callback=(lambda x: None), start_paused=False):
+    def __init__(self, time_limit=0., seed=None, info_callback=(lambda x: None), start_paused=False, player_num=2):
         if seed is None:
             seed = random.randrange(0, 4294967296)
         self._seed = seed
@@ -163,7 +163,7 @@ class Game:
         self._logger.level = Logging.DEBUG
         self._time_limit = time_limit
         self._logic = ts17core.interface.Interface()
-        init_json = '{"action":"init","seed":' + str(self._seed) + '}'
+        init_json = '{"action":"init","seed":' + str(self._seed) + ',"player":'+str(player_num)+'}'
         self._logic.setInstruction(init_json)
         self._queue = queue.PriorityQueue()
         self._last_action_timestamp = 0
@@ -252,7 +252,7 @@ def main():
 def run_main(args: dict):
     global game_uiobj
 
-    game_obj = Game(time_limit=float(args['-t'] or 0), seed=args['-s'])
+    game_obj = Game(time_limit=float(args['-t'] or 0), seed=args['-s'], player_num=len(args['<ai>']))
 
     # init ai_proxy
     ai_proxy.start(args['<ai>'], lambda x: push_queue_ai_proxy(x, game_obj))
