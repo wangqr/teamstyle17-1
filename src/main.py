@@ -1,10 +1,10 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'''
+"""
 usage:
     ts17 [-v|--version] [-h|--help]
-    ts17 run [-d] [-o <repfile>] [-t <timelimit>] <ai> ...
+    ts17 run [-d] [-o <repfile>] [-s <seed>] [-t <timelimit>] <ai> ...
     ts17 replay <repfile>
 
 options:
@@ -14,8 +14,9 @@ options:
     -d             enable debug mode, allow programmatically pause the game
     -o <repfile>   log to file, if file name is not specified, current time
                    will be used
+    -s <seed>      specify the map seed
     -t <timelimit> set the time limit of the game in seconds
-'''
+"""
 
 
 import docopt
@@ -24,6 +25,7 @@ import json
 import random
 import os
 import signal
+import sys
 import time
 import threading
 
@@ -82,49 +84,158 @@ class Timer:
 
 
 class EndSignalGenerator (threading.Thread):
-    def __init__(self):
+    def __init__(self, game_obj, time_limit: float):
         threading.Thread.__init__(self)
+        self.daemon = True
+        self._game = game_obj
+        self._limit = time_limit
 
     def run(self):
-        global action_queue
-        global game_timer
+        global root_logger
         while 1:
-            if game_timer.current_time > time_limit:
-                end_action = action.Action('{"action":"_platform"}', "_end", None)
-                if __debug__:
-                    print('['+str(game_timer.current_time)+'] put stop sig')
-                action_queue.put((0, end_action))
+            if self._game.current_time > self._limit:
+                root_logger.info('put stop signal')
+                self._game.enqueue(0, action.Action('{"action":"_platform"}', "_end", None))
                 return
             else:
-                time.sleep((time_limit - game_timer.current_time))
+                time.sleep(self._limit - self._game.current_time)
+
+
+class Logging:
+    CRITICAL = 50
+    FATAL = CRITICAL
+    ERROR = 40
+    WARNING = 30
+    WARN = WARNING
+    INFO = 20
+    DEBUG = 10
+    NOTSET = 0
+
+    def __init__(self, timer=(lambda: time.ctime()[4:-5])):
+        self.level = self.__class__.INFO
+        self.__set_error_color = ''
+        self.__set_warning_color = ''
+        self.__set_debug_color = ''
+        self.__reset_color = ''
+        self.__get_time_str = timer
+        if hasattr(sys.stderr, 'isatty') and sys.stderr.isatty():
+            self.__set_error_color = '\x1b[31m'
+            self.__set_warning_color = '\x1b[33m'
+            self.__set_debug_color = '\x1b[32m'
+            self.__reset_color = '\x1b[m'
+
+    def log(self, level, fmt, *args):
+        return '%s - [%s] %s\n' % (level, self.__get_time_str(), fmt % args)
+
+    def dummy(self, *args, **kwargs):
+        pass
+
+    def debug(self, fmt, *args):
+        sys.stderr.write(self.__set_debug_color + self.log('DEBUG', fmt, *args) + self.__reset_color)
+
+    def info(self, fmt, *args):
+        sys.stderr.write(self.log('INFO', fmt, *args))
+
+    def warn(self, fmt, *args):
+        sys.stderr.write(self.__set_warning_color + self.log('WARNING', fmt, *args) + self.__reset_color)
+
+    def error(self, fmt, *args):
+        sys.stderr.write(self.__set_error_color + self.log('ERROR', fmt, *args) + self.__reset_color)
+
+    def critical(self, fmt, *args):
+        sys.stderr.write(self.__set_error_color + self.log('CRITICAL', fmt, *args) + self.__reset_color)
+
+    def basic_config(self, **kwargs):
+        self.level = int(kwargs.get('level', self.__class__.INFO))
+        if self.level > self.__class__.DEBUG:
+            self.debug = self.dummy
+
+
+class Game:
+    def __init__(self, time_limit=0., seed=None, info_callback=(lambda x: None), start_paused=False):
+        if seed is None:
+            seed = random.randrange(0, 4294967296)
+        self._seed = seed
+        self._timer = Timer()
+        self._info_callback = info_callback
+        self._logger = Logging(timer=lambda: '%.2f' % self._timer.current_time)
+        self._logger.info('game seed = %d', self._seed)
+        self._logger.level = Logging.DEBUG
+        self._time_limit = time_limit
+        self._logic = ts17core.interface.Interface()
+        init_json = '{"action":"init","seed":' + str(self._seed) + '}'
+        self._logic.setInstruction(init_json)
+        self._queue = queue.PriorityQueue()
+        self._last_action_timestamp = 0
+        if not start_paused:
+            self._timer.start()
+        if time_limit:
+            EndSignalGenerator(game_obj=self, time_limit=time_limit).start()
+
+    @property
+    def seed(self) -> int:
+        return self._seed
+
+    def mainloop(self):
+        while 1:
+            next_action = self._queue.get(block=True)
+            self._logger.debug('>>>>>>>> recv %s', next_action[1].action_json or '')
+            if next_action[1].action_name == '_pause':
+                game_timer.running = not game_timer.running
+                continue
+            elif next_action[1].action_name == '_end':
+                self._logger.info('stop signal received')
+                break
+            if self._time_limit and next_action[0] > self._time_limit:
+                break
+            if self.__logic_time(next_action[0]) > self._last_action_timestamp:
+                ret = None
+                while self.__logic_time(next_action[0]) > self._last_action_timestamp:
+                    ret = self._logic.nextTick()
+                    self._last_action_timestamp += 1
+                self._info_callback(ret)
+            next_action[1].set_timestamp(self._last_action_timestamp)
+            if next_action[1].action_name != 'query':
+                # run_logger.log_action(next_action[1])
+                pass
+            next_action[1].run(self._logic)
+            self._logger.debug('<<<<<<<< fin')
+
+    def enqueue(self, timestamp, act):
+        self._queue.put((timestamp, act))
+
+    @property
+    def current_time(self) -> float:
+        return self._timer.current_time
+
+    @staticmethod
+    def __logic_time(timestamp: float) -> int:
+        return int(timestamp)
 
 
 action_queue = queue.PriorityQueue()
 game_timer = Timer()
-time_limit = 0
 game_uiobj = None
+root_logger = Logging()
 
 
-def push_queue_ai_proxy(obj: str):
-    global action_queue
-    global game_timer
-    timestamp = game_timer.current_time
+def push_queue_ai_proxy(obj: str, game_obj: Game):
+    global root_logger
+    timestamp = game_obj.current_time
     act = json.loads(obj).get('action')
     ret = None
     if act in ["init", "move", "use_skill", "upgrade_skill"]:
-        action_queue.put((timestamp, action.Action(obj, 'instruction', None)))
+        game_obj.enqueue(timestamp, action.Action(obj, 'instruction', None))
     elif act in ["query_map", "query_status"]:
         ret = queue.Queue()
-        action_queue.put((timestamp, action.Action(obj, 'query', ret)))
+        game_obj.enqueue(timestamp, action.Action(obj, 'query', ret))
     elif act and act[0] == '_':
-        action_queue.put((0, action.Action('{"action":"_platform"}', act, None)))
+        game_obj.enqueue(0, action.Action('{"action":"_platform"}', act, None))
     ret_str = None
     if ret:
-        if __debug__:
-            print('['+str(game_timer.current_time)+'] waiting for ret_str')
+        root_logger.debug('waiting for ret_str')
         ret_str = ret.get(block=True)
-        if __debug__:
-            print('['+str(game_timer.current_time)+'] core returned \''+str(ret_str)+'\'')
+        root_logger.debug('core returned \''+str(ret_str)+'\'')
     return ret_str
 
 
@@ -143,62 +254,19 @@ def main():
 def run_main(args: dict):
     global action_queue
     global game_timer
-    global time_limit
     global game_uiobj
 
-    last_action_timestamp = 0
-
-    # init logic
-    main_logic = ts17core.interface.Interface()
-
-    game_started = True
+    game_obj = Game(time_limit=float(args['-t'] or 0), seed=args['-s'])
 
     # init ai_proxy
-    ai_proxy.start(args['<ai>'], push_queue_ai_proxy)
+    ai_proxy.start(args['<ai>'], lambda x: push_queue_ai_proxy(x, game_obj))
 
     #   init ui
-    game_uiobj = uiobj.UIObject(push_queue_ai_proxy, ai_id = -1)
+    game_uiobj = uiobj.UIObject(lambda x: push_queue_ai_proxy(x, game_obj), ai_id=-1)
 
-    #   get init action
-    init_json = '{"action":"init","seed":' + str(random.randrange(0,4294967296)) + '}'
-    main_logic.setInstruction(init_json)
-
-    #   init logger
-    # run_logger = logger.Run_Logger(init_json)
-
-    if args['-t']:
-        time_limit = float(args['-t'])
-
-    if time_limit > 0:
-        EndSignalGenerator().start()
-
-    game_timer.start()
     # main loop
-    while game_started:
-        next_action = action_queue.get(block=True)
-        if __debug__:
-            print('['+str(game_timer.current_time)+'] \x1b[1;32m>>>>>>>> recv id=' + str(json.loads(next_action[1].action_json).get('ai_id')) +' ' + json.loads(next_action[1].action_json).get('action') + ' '+ next_action[1].action_name +'\x1b[m')
-        if next_action[1].action_name == '_pause':
-            if args['-d']:
-                game_timer.running = not game_timer.running
-            else:
-                print('illegal action: pause')
-            continue
-        elif next_action[1].action_name == '_end':
-            if __debug__:
-                print('['+str(game_timer.current_time)+'] \x1b[1;33mstop sig detected\x1b[m')
-            break
-        if next_action[0] > last_action_timestamp:
-            last_action_timestamp = next_action[0]
-        if time_limit and last_action_timestamp > time_limit:
-            break
-        next_action[1].set_timestamp(last_action_timestamp)
-        if next_action[1].action_name != 'query':
-            # run_logger.log_action(next_action[1])
-            pass
-        next_action[1].run(main_logic)
-        if __debug__:
-            print('['+str(game_timer.current_time)+'] \x1b[1;32m<<<<<<<< fin ' + next_action[1].action_json +'\x1b[m')
+    game_obj.mainloop()
+
     # ai_proxy.stopAI()
     if __debug__:
         print('['+str(game_timer.current_time)+'] \x1b[1;31mquit\x1b[m')
