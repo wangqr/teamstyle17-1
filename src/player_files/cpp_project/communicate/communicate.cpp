@@ -66,6 +66,8 @@ const PlayerStatus *UpdateStatus() {
 	return &STATUS_;
 }
 
+// TODO: 加入使用者的 ID
+
 void Move(Position des) {
 	char msg_send[kMaxMessageLength];
 	sprintf(msg_send, "move %d %d %d", des.x, des.y, des.z);
@@ -88,4 +90,8 @@ void PAUSE() {
 	char msg_send[kMaxMessageLength];
 	sprintf(msg_send, "pause");
 	Communicate(msg_send);
+}
+
+void CONTINUE() {
+	PAUSE();  // 实际上和 PAUSE 的指令是一样的...
 }

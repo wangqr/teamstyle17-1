@@ -16,6 +16,7 @@ void UpgradeSkill(SkillType skill);
 
 // 特殊指令
 void PAUSE();  // 调试用
+void CONTINUE();
 
 // 其他
 double Distance(Position pos1, Position pos2);

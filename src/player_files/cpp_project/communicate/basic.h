@@ -3,6 +3,18 @@
 #ifndef BASIC_H_
 #define BASIC_H_
 
+#define INF_ 2147483647
+
+const int kMapSize = 10000;
+const int kMaxObjectNumber = 10000;
+
+const double kDeathRatio = 1 / 4;  // 当前生命值与历史最大生命值之比小于此值即告死亡
+const double kEdibleRatio = 5 / 6;  // 目标单位半径与自己单位半径的比值小于此值时可以食用
+const double kSpikeDamage = 1 / 3;
+const int kMoveSpeed = 0;
+const int kFoodHealth = 10;
+
+
 struct Position {
 	int x;
 	int y;
@@ -26,7 +38,7 @@ enum SkillType {
 	TELEPORT,
 
 	VISION_UP,
-	HEALTH_UP,
+	HEALTH_UP,  // 非技能
 
 	kSkillTypes
 };
@@ -34,30 +46,29 @@ enum SkillType {
 const int kMaxSkillLevel = 5;
 
 // 技能参数 TODO
-const int kLongAttackDamage[kMaxSkillLevel] = { 0 };
-const int kShortAttackDamage[kMaxSkillLevel] = { 0 };
-const int kShieldTime[kMaxSkillLevel] = { 0 };
-const int kTeleportMaxDistance[kMaxSkillLevel] = { 0 };
-const int kVisionUpValue[kMaxSkillLevel] = { 0 };
+const int kLongAttackDamage[kMaxSkillLevel + 1] = { 0, 100, 200, 300, 400, 500 };
+const int kLongAttackSpeed[kMaxSkillLevel + 1] = { 0, 100, 150, 200, 250, 300 };
+const int kShortAttackDamage[kMaxSkillLevel + 1] = { 0, 1000, 1200, 1400, 1600, 1800 };
+const int kShortAttackRange[kMaxSkillLevel + 1] = { 0, 100, 110, 120, 130, 140 };
+const int kShieldTime[kMaxSkillLevel + 1] = { 0, 100, 120, 140, 160, 180 };
+const int kTeleportMaxDistance[kMaxSkillLevel + 1] = { 0, 10000, 11000, 12000, 13000, INF_ };
+const int kVisionUpValue[kMaxSkillLevel + 1] = { 0, 1000, 1500, 2000, 2500, 3000 };
 const int kHealthUpValue = 2000;
 
-const int kSkillCD[kSkillTypes] = { 0 };
+const int kSkillCD[kSkillTypes] = { 80, 80, 100, 100, 0, 0 };
+const int kSkillCost[kSkillTypes] = { 10, 50, 0, 0, 0, 0 };  // 技能使用开销
 
 // 基础技能升级开销
-const int kBasicSkillPrice[kSkillTypes] = { 1, 1, 2, 2, 2, 1 };  // From ts17core/gamemain.py
+const int kBasicSkillPrice[kSkillTypes] = { 1, 1, 2, 2, 2, 1 };
 
 struct Object {
+	int team_id;
 	int id;
+	int history_max_health;  // -1 表示此属性无效 (不存在 / 不可见)
 	ObjectType type;
 	Position pos;
 	int radius;
 };
-
-// 物体/地图参数
-const int kFoodHealth = 10;
-
-const int kMapSize = 10000;
-const int kMaxObjectNumber = 10000;
 
 struct MapInfo {
 	int time;
