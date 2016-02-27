@@ -4,7 +4,7 @@
 """
 usage:
     ts17 [-v|--version] [-h|--help]
-    ts17 run [-d] [-o <repfile>] [-s <seed>] [-t <timelimit>] <ai> ...
+    ts17 run [-d] [-o <repfile>] [-s <seed>] [-t <timelimit>] [-V] <ai> ...
     ts17 replay <repfile>
 
 options:
@@ -16,6 +16,7 @@ options:
                    will be used
     -s <seed>      specify the map seed
     -t <timelimit> set the time limit of the game in seconds
+    -V             verbose output
 """
 
 import docopt
@@ -130,37 +131,46 @@ class Logging:
         pass
 
     def debug(self, fmt, *args):
+        if self.level > self.__class__.DEBUG:
+            return
         sys.stderr.write(self.__set_debug_color + self.log('DEBUG', fmt, *args) + self.__reset_color)
 
     def info(self, fmt, *args):
+        if self.level > self.__class__.INFO:
+            return
         sys.stderr.write(self.log('INFO', fmt, *args))
 
     def warn(self, fmt, *args):
+        if self.level > self.__class__.WARN:
+            return
         sys.stderr.write(self.__set_warning_color + self.log('WARNING', fmt, *args) + self.__reset_color)
 
     def error(self, fmt, *args):
+        if self.level > self.__class__.ERROR:
+            return
         sys.stderr.write(self.__set_error_color + self.log('ERROR', fmt, *args) + self.__reset_color)
 
     def critical(self, fmt, *args):
+        if self.level > self.__class__.CRITICAL:
+            return
         sys.stderr.write(self.__set_error_color + self.log('CRITICAL', fmt, *args) + self.__reset_color)
 
     def basic_config(self, **kwargs):
         self.level = int(kwargs.get('level', self.__class__.INFO))
-        if self.level > self.__class__.DEBUG:
-            self.debug = self.dummy
 
 
 class Game:
-    def __init__(self, time_limit=0., seed=None, info_callback=(lambda x: None), start_paused=False, player_num=2):
+    def __init__(self, time_limit=0., seed=None, info_callback=(lambda x: None), start_paused=False, player_num=2,
+                 verbose=False):
         if seed is None:
             seed = random.randrange(0, 4294967296)
         self._seed = seed
         self._timer = Timer()
         self._info_callback = info_callback
         self._logger = Logging(
-            timer=lambda: '%d @ %.6f' % (self.__logic_time(self._timer.current_time), self._timer.current_time))
+                timer=lambda: '%d @ %.6f' % (self.__logic_time(self._timer.current_time), self._timer.current_time))
         self._logger.info('game seed = %d', self._seed)
-        self._logger.level = Logging.DEBUG
+        self._logger.basic_config(level=Logging.DEBUG if verbose else Logging.INFO)
         self._time_limit = time_limit
         self._logic = ts17core.interface.Interface(info_callback)
         init_json = '{"action":"init","seed":' + str(self._seed) + ',"player":' + str(player_num) + '}'
@@ -176,18 +186,20 @@ class Game:
         if time_limit:
             EndSignalGenerator(game_obj=self, time_limit=time_limit).start()
         self.__mutex = threading.Lock()
+        self.end = False
 
     @property
     def seed(self) -> int:
         return self._seed
 
     def mainloop(self):
-        while 1:
+        while not self._time_limit or self.current_time < self._time_limit:
             while self._queue.empty() and self.__logic_time(self.current_time) == self._last_action_timestamp:
                 pass
             if self._queue.empty():
                 ret = self._logic.nextTick()
                 self._info_callback(ret)
+                self._last_action_timestamp += 1
                 continue
             else:
                 next_action = self._queue.get(block=True)
@@ -202,8 +214,7 @@ class Game:
                 continue
             elif next_action[2].action_name == '_end':
                 self._logger.info('stop signal received')
-                break
-            if self._time_limit and next_action[0] > self._time_limit:
+                self._logger.debug('<<<<<<<< fin')
                 break
             if self.__logic_time(next_action[0]) > self._last_action_timestamp:
                 ret = None
@@ -271,21 +282,29 @@ def main():
 
 def run_main(args: dict):
     global game_uiobj
+    global root_logger
 
-    game_obj = Game(time_limit=float(args['-t'] or 0), seed=args['-s'], player_num=len(args['<ai>']))
+    root_logger.basic_config(level=(Logging.DEBUG if args['-V'] else Logging.INFO))
+
+    game_obj = Game(time_limit=float(args['-t'] or 0), seed=args['-s'], player_num=len(args['<ai>']),
+                    verbose=args['-V'])
 
     # init ai_proxy
     ai_proxy.start(args['<ai>'], lambda x: push_queue_ai_proxy(x, game_obj))
 
-    #   init ui
+    # init ui
     game_uiobj = uiobj.UIObject(lambda x: push_queue_ai_proxy(x, game_obj), ai_id=-1)
 
     # main loop
     game_obj.mainloop()
 
+    # exit ui thread
+    game_uiobj.exit()
+
     # ai_proxy.stopAI()
-    if __debug__:
-        print('[' + str(game_timer.current_time) + '] \x1b[1;31mquit\x1b[m')
+    root_logger.info('quit.')
+
+    time.sleep(0.3)
     os.kill(os.getpid(), signal.SIGTERM)
 
 
