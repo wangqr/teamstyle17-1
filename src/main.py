@@ -18,7 +18,6 @@ options:
     -t <timelimit> set the time limit of the game in seconds
 """
 
-
 import docopt
 import queue
 import json
@@ -38,7 +37,7 @@ import uiobj
 import ts17core
 import ts17core.interface
 
-__version__ = '0.1-a'
+__version__ = '0.1-b'
 
 
 class Timer:
@@ -83,7 +82,7 @@ class Timer:
         self.stop()
 
 
-class EndSignalGenerator (threading.Thread):
+class EndSignalGenerator(threading.Thread):
     def __init__(self, game_obj, time_limit: float):
         threading.Thread.__init__(self)
         self.daemon = True
@@ -158,18 +157,22 @@ class Game:
         self._seed = seed
         self._timer = Timer()
         self._info_callback = info_callback
-        self._logger = Logging(timer=lambda: '%.2f' % self._timer.current_time)
+        self._logger = Logging(
+            timer=lambda: '%d @ %.6f' % (self.__logic_time(self._timer.current_time), self._timer.current_time))
         self._logger.info('game seed = %d', self._seed)
         self._logger.level = Logging.DEBUG
         self._time_limit = time_limit
-        self._logic = ts17core.interface.Interface()
-        init_json = '{"action":"init","seed":' + str(self._seed) + ',"player":'+str(player_num)+'}'
+        self._logic = ts17core.interface.Interface(info_callback)
+        init_json = '{"action":"init","seed":' + str(self._seed) + ',"player":' + str(player_num) + '}'
         self._logic.setInstruction(init_json)
         self._queue = queue.PriorityQueue()
         self._last_action_timestamp = 0
         self.__action_count = 0
         if not start_paused:
+            self.__pause_field = 0
             self._timer.start()
+        else:
+            self.__pause_field = 1
         if time_limit:
             EndSignalGenerator(game_obj=self, time_limit=time_limit).start()
         self.__mutex = threading.Lock()
@@ -180,10 +183,22 @@ class Game:
 
     def mainloop(self):
         while 1:
-            next_action = self._queue.get(block=True)
+            while self._queue.empty() and self.__logic_time(self.current_time) == self._last_action_timestamp:
+                pass
+            if self._queue.empty():
+                ret = self._logic.nextTick()
+                self._info_callback(ret)
+                continue
+            else:
+                next_action = self._queue.get(block=True)
             self._logger.debug('>>>>>>>> recv %s', next_action[2].action_json or '')
             if next_action[2].action_name == '_pause':
-                self._timer.running = not self._timer.running
+                self.__pause_field ^= (1 << (1 + next_action[2].ai_id))
+                if self.__pause_field:
+                    self._timer.stop()
+                else:
+                    self._timer.start()
+                self._logger.debug('<<<<<<<< fin')
                 continue
             elif next_action[2].action_name == '_end':
                 self._logger.info('stop signal received')
@@ -215,7 +230,7 @@ class Game:
 
     @staticmethod
     def __logic_time(timestamp: float) -> int:
-        return int(timestamp)
+        return int(timestamp * 30)
 
 
 game_uiobj = None
@@ -233,19 +248,19 @@ def push_queue_ai_proxy(obj: str, game_obj: Game):
         ret = queue.Queue()
         game_obj.enqueue(timestamp, action.Action(obj, 'query', ret))
     elif act and act[0] == '_':
-        game_obj.enqueue(float(0.), action.Action('{"action":"_platform"}', act, None))
+        game_obj.enqueue(float(0.),
+                         action.Action('{"action":"_platform","ai_id":%d}' % json.loads(obj).get('ai_id'), act, None))
     ret_str = None
     if ret:
         root_logger.debug('waiting for ret_str')
         ret_str = ret.get(block=True)
-        root_logger.debug('core returned \''+str(ret_str)+'\'')
+        root_logger.debug('core returned \'' + str(ret_str) + '\'')
     return ret_str
 
 
 def main():
-    if __debug__:
-        print('__debug__ == ' + str(__debug__))
-    args = docopt.docopt(__doc__, version = 'ts17-platform ' + __version__ + ' [ts17-core ver ' + ts17core.__version__ + ']')
+    args = docopt.docopt(__doc__,
+                         version='ts17-platform ' + __version__ + ' [ts17-core ver ' + ts17core.__version__ + ']')
     if args['run']:
         run_main(args)
     elif args['replay']:
@@ -270,12 +285,13 @@ def run_main(args: dict):
 
     # ai_proxy.stopAI()
     if __debug__:
-        print('['+str(game_timer.current_time)+'] \x1b[1;31mquit\x1b[m')
+        print('[' + str(game_timer.current_time) + '] \x1b[1;31mquit\x1b[m')
     os.kill(os.getpid(), signal.SIGTERM)
 
 
 def replay_main(args: dict):
     pass
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     main()
