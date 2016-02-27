@@ -14,7 +14,8 @@ PlayerStatus STATUS_;
 // 以下是平台用
 
 void LoadMapInfo(char *info_str) {
-	int st = 0, ed = 0, object_counter = 0;
+	int st = 12, ed = 12, object_counter = 0; // 强行让 time 的字段长为 12
+	sscanf(info_str, "%d", &MAP_.time);
 	while (info_str[ed] != 0) {
 		if (info_str[ed] == ';') {  // 不同 Object 的数据以 ';' 分隔
 			info_str[ed] = 0;

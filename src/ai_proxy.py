@@ -12,6 +12,7 @@ max_message_length = 10000
 
 
 def set_string_value(buffer, string):
+    assert len(string) + 1 < max_message_length
     for i, char in enumerate(string):
         buffer[i] = ord(char)
     buffer[len(string)] = 0
@@ -36,11 +37,12 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
 
     elif action_name == 'query_map':
         assert info['ai_id'] == ai_id
+        ret_str = '%10d |' % info['time']
         ret_values = []
         for obj in info['objects']:
             assert obj['type'] in object_types
             ret_values.append([obj['id'], object_types.index(obj['type'])] + obj['pos'] + [obj['r']])
-        ret_str = ';'.join([' '.join([str(int(x)) for x in obj_value]) for obj_value in ret_values])
+        ret_str += ';'.join([' '.join([str(int(x)) for x in obj_value]) for obj_value in ret_values])
 
     return ret_str
 

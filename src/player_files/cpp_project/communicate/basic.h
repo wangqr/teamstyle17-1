@@ -60,7 +60,7 @@ const int kMapSize = 10000;
 const int kMaxObjectNumber = 10000;
 
 struct MapInfo {
-	int time;  // ?
+	int time;
 	Object objects[kMaxObjectNumber];
 	int objects_list_size;
 };
