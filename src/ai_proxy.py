@@ -66,14 +66,14 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
         ret = load_msg_from_logic(msg_from_logic, action_name, ai_id, skill_types, object_types)
 
     elif action_name == 'move':
-        info_send = dict(action='move', time=0, ai_id=ai_id, id=int(msg[0]), x=msg[1], y=msg[2], z=msg[3])
+        info_send = dict(action='move', time=0, ai_id=ai_id, id=int(msg[0]), x=float(msg[1]), y=float(msg[2]), z=float(msg[3]))
         info_send['id'] = int(msg[0]) if int(msg[0]) != -1 else ai_id  # For Debug
         msg_send = json.dumps(info_send)
         enqueue_func(msg_send)
 
     elif action_name == 'use_skill' and int(msg[0]) in range(4):  # 技能在技能列表中
         info_send = dict(action='use_skill', time=0, ai_id=ai_id, skill_type=skill_types[int(msg[0])],
-                         id=int(msg[1]), target=int(msg[2]), x=msg[3], y=msg[4], z=msg[5])
+                         id=int(msg[1]), target=int(msg[2]), x=float(msg[3]), y=float(msg[4]), z=float(msg[5]))
         info_send['id'] = int(msg[1]) if int(msg[1]) != -1 else ai_id  # For Debug
         msg_send = json.dumps(info_send)
         enqueue_func(msg_send)
