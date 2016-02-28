@@ -4,7 +4,7 @@
 #include <math.h>
 
 double Distance(Position pos1, Position pos2) {
-	double dx = abs(pos1.x - pos2.x), dy = abs(pos1.y - pos2.y), dz = abs(pos1.z - pos2.z);
+	double dx = fabs(pos1.x - pos2.x), dy = fabs(pos1.y - pos2.y), dz = fabs(pos1.z - pos2.z);
 	return sqrt(dx * dx + dy * dy + dz * dz);
 }
 

@@ -7,12 +7,16 @@
 
 // 查询指令
 const MapInfo *UpdateMap();  // 获取视野内的单位信息
-const PlayerStatus *UpdateStatus();  // 获取自己的状态
+const PlayerStatus *UpdateStatus(int user_id = -1);  // 获取自己的状态
 
 // 行动指令
-void Move(Position des);  // 移动，参数是速度矢量? 可以有负值?
-void UseSkill(SkillType skill, Position des = { -1, -1, -1 }); // des 仅对 teleport(目标位置) 和 long attack(方向矢量?) 适用
-void UpgradeSkill(SkillType skill);
+void Move(int user_id, Position des);  // 移动，参数是速度矢量
+void LongAttack(int user_id, int target_id);
+void ShortAttack(int user_id);
+void Shield(int user_id);
+void Teleport(int user_id, Position des);
+void HealthUp(int user_id);
+void UpgradeSkill(int user_id, SkillType skill);
 
 // 特殊指令
 void PAUSE();  // 调试用

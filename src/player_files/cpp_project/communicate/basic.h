@@ -16,9 +16,9 @@ const int kFoodHealth = 10;
 
 
 struct Position {
-	int x;
-	int y;
-	int z;
+	double x;
+	double y;
+	double z;
 };
 
 enum ObjectType {
@@ -67,7 +67,7 @@ struct Object {
 	int history_max_health;  // -1 表示此属性无效 (不存在 / 不可见)
 	ObjectType type;
 	Position pos;
-	int radius;
+	double radius;
 };
 
 struct MapInfo {

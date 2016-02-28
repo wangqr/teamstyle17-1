@@ -5,7 +5,7 @@
 
 import ctypes
 import json
-from threading import Thread, current_thread
+from threading import Thread
 from multiprocessing import Process
 
 max_message_length = 10000
@@ -28,7 +28,7 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
             if player['id'] == ai_id:
                 for skill in player['skills']:
                     skill_levels[skill['name']] = skill['level']
-                ret_values = [ai_id, player['health'], player['vision'], player['ability']]
+                ret_values = [player['id'], player['health'], player['vision'], player['ability']]
                 ret_values.extend([skill_levels[skill] for skill in skill_types])
                 assert len(ret_values) == 10  # id, health, vision, ability, 6 个技能的等级
                 ret_str = ' '.join([str(int(x)) for x in ret_values])
@@ -41,8 +41,10 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
         ret_values = []
         for obj in info['objects']:
             assert obj['type'] in object_types
-            ret_values.append([obj['id'], object_types.index(obj['type'])] + obj['pos'] + [obj['r']])
-        ret_str += ';'.join([' '.join([str(int(x)) for x in obj_value]) for obj_value in ret_values])
+            # ret_values.append([int(obj['id']), int(object_types.index(obj['type']))] + obj['pos']] + [obj['r']])
+            obj_str = '%d %d %.30f %.30f %.30f %.30f' % (int(obj['id']), int(object_types.index(obj['type'])), obj['pos'][0],obj['pos'][1],obj['pos'][2] , obj['r'])
+            ret_values.append(obj_str)
+        ret_str += ';'.join(ret_values)
 
     return ret_str
 
@@ -57,22 +59,29 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
     ret = ''
 
     if action_name in ['query_map', 'query_status']:
-        msg_send = r'{"action": "%s","time": 0,"ai_id": %d}' % (action_name, ai_id)
+        info_send = dict(action=action_name, time=0, ai_id=ai_id)
+        info_send['id'] = int(msg[0]) if action_name == 'query_status' and int(msg[0]) != -1 else ai_id
+        msg_send = json.dumps(info_send)
         msg_from_logic = enqueue_func(msg_send)
         ret = load_msg_from_logic(msg_from_logic, action_name, ai_id, skill_types, object_types)
 
     elif action_name == 'move':
-        msg_send = r'{"action": "move","time": 0,"ai_id": %d,"x": %d,"y": %d,"z": %d}' % (
-            ai_id, int(msg[0]), int(msg[1]), int(msg[2]))
+        info_send = dict(action='move', time=0, ai_id=ai_id, id=int(msg[0]), x=msg[1], y=msg[2], z=msg[3])
+        info_send['id'] = int(msg[0]) if int(msg[0]) != -1 else ai_id  # For Debug
+        msg_send = json.dumps(info_send)
         enqueue_func(msg_send)
 
     elif action_name == 'use_skill' and int(msg[0]) in range(4):  # 技能在技能列表中
-        msg_send = r'{"action": "use_skill","time": 0,"ai_id": %d,"skill_type": "%s","x": %d,"y": %d,"z": %d,"target": %d}' \
-                   % (ai_id, skill_types[int(msg[0])], int(msg[1]), int(msg[2]), int(msg[3]), -1)  # target 是有用的吗？
+        info_send = dict(action='use_skill', time=0, ai_id=ai_id, skill_type=skill_types[int(msg[0])],
+                         id=int(msg[1]), target=int(msg[2]), x=msg[3], y=msg[4], z=msg[5])
+        info_send['id'] = int(msg[1]) if int(msg[1]) != -1 else ai_id  # For Debug
+        msg_send = json.dumps(info_send)
         enqueue_func(msg_send)
 
     elif action_name == 'upgrade_skill' and int(msg[0]) in range(6):
-        msg_send = r'{"action": "upgrade_skill","time": 0,"ai_id": %d,"skill_type": "%s"}' % (ai_id, skill_types[int(msg[0])])
+        info_send = dict(action='upgrade_skill', time=0, skill_type=skill_types[int(msg[0])], ai_id=ai_id, id=int(msg[1]))
+        info_send['id'] = int(msg[1]) if int(msg[1]) != -1 else ai_id  # For Debug
+        msg_send = json.dumps(info_send)
         enqueue_func(msg_send)
 
     elif action_name == 'pause':

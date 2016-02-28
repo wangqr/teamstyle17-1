@@ -19,7 +19,7 @@ void LoadMapInfo(char *info_str) {
 	while (info_str[ed] != 0) {
 		if (info_str[ed] == ';') {  // 不同 Object 的数据以 ';' 分隔
 			info_str[ed] = 0;
-			sscanf(info_str + st, "%d%d%d%d%d%d", &MAP_.objects[object_counter].id, &MAP_.objects[object_counter].type,
+			sscanf(info_str + st, "%d%d%lf%lf%lf%lf", &MAP_.objects[object_counter].id, &MAP_.objects[object_counter].type,
 				&MAP_.objects[object_counter].pos.x, &MAP_.objects[object_counter].pos.y, &MAP_.objects[object_counter].pos.z,
 				&MAP_.objects[object_counter].radius);
 			++object_counter;
@@ -28,7 +28,7 @@ void LoadMapInfo(char *info_str) {
 		++ed;
 	}
 	if (ed > st) {
-		sscanf(info_str + st, "%d%d%d%d%d%d", &MAP_.objects[object_counter].id, &MAP_.objects[object_counter].type,
+		sscanf(info_str + st, "%d%d%lf%lf%lf%lf", &MAP_.objects[object_counter].id, &MAP_.objects[object_counter].type,
 			&MAP_.objects[object_counter].pos.x, &MAP_.objects[object_counter].pos.y, &MAP_.objects[object_counter].pos.z,
 			&MAP_.objects[object_counter].radius);
 		++object_counter;
@@ -55,9 +55,9 @@ const MapInfo *UpdateMap() {
 	return &MAP_;
 }
 
-const PlayerStatus *UpdateStatus() {
+const PlayerStatus *UpdateStatus(int user_id) {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "query_status");
+	sprintf(msg_send, "query_status %d", user_id);
 
 	char msg_receive[kMaxMessageLength];
 	strcpy(msg_receive, Communicate(msg_send));
@@ -66,24 +66,45 @@ const PlayerStatus *UpdateStatus() {
 	return &STATUS_;
 }
 
-// TODO: 加入使用者的 ID
-
-void Move(Position des) {
+void Move(int user_id, Position des) {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "move %d %d %d", des.x, des.y, des.z);
+	sprintf(msg_send, "move %d %.30f %.30f %.30f", user_id, des.x, des.y, des.z);
 	Communicate(msg_send);
 }
 
-void UseSkill(SkillType skill, Position des) {
+void UseSkill(SkillType skill, int user_id, int target_id, Position des) {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "use_skill %d %d %d %d", skill, des.x, des.y, des.z);
+	sprintf(msg_send, "use_skill %d %d %d %.30f %.30f %.30f", skill, user_id, target_id, des.x, des.y, des.z);
 	Communicate(msg_send);
 }
 
-void UpgradeSkill(SkillType skill) {
+void LongAttack(int user_id, int target_id) {
+	Position tmp = { -1, -1, -1 };
+	UseSkill(LONG_ATTACK, user_id, target_id, tmp);
+}
+
+void ShortAttack(int user_id) {
+	Position tmp = { -1, -1, -1 };
+	UseSkill(SHORT_ATTACK, user_id, -1, tmp);
+}
+
+void Shield(int user_id) {
+	Position tmp = { -1, -1, -1 };
+	UseSkill(SHIELD, user_id, -1, tmp);
+}
+
+void Teleport(int user_id, Position des) {
+	UseSkill(TELEPORT, user_id, -1, des);
+}
+
+void UpgradeSkill(int user_id, SkillType skill) {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "upgrade_skill %d", skill);
+	sprintf(msg_send, "upgrade_skill %d %d", skill, user_id);
 	Communicate(msg_send);
+}
+
+void HealthUp(int user_id) {
+	UpgradeSkill(user_id, HEALTH_UP);
 }
 
 void PAUSE() {
