@@ -42,7 +42,12 @@ __version__ = '0.1-b'
 
 
 class Timer:
-    def __init__(self, func=time.perf_counter):
+    def __init__(self, func=None):
+        if func is None:
+            if time.__dict__.get('perf_counter'):
+                func = time.perf_counter
+            else:
+                func = time.clock
         self.elapsed = 0.0
         self._func = func
         self._start = None
@@ -168,7 +173,7 @@ class Game:
         self._timer = Timer()
         self._info_callback = info_callback
         self._logger = Logging(
-                timer=lambda: '%d @ %.6f' % (self.__logic_time(self._timer.current_time), self._timer.current_time))
+            timer=lambda: '%d @ %.6f' % (self.__logic_time(self._timer.current_time), self._timer.current_time))
         self._logger.info('game seed = %d', self._seed)
         self._logger.basic_config(level=Logging.DEBUG if verbose else Logging.INFO)
         self._time_limit = time_limit
@@ -286,8 +291,8 @@ def run_main(args: dict):
 
     root_logger.basic_config(level=(Logging.DEBUG if args['-V'] else Logging.INFO))
 
-    game_obj = Game(time_limit=float(args['-t'] or 0), seed=args['-s'], player_num=len(args['<ai>']),
-                    verbose=args['-V'])
+    game_obj = Game(time_limit=float(args['-t'] or 0), seed=int(args['-s']) if args['-s'] else None,
+                    player_num=len(args['<ai>']), verbose=args['-V'])
 
     # init ai_proxy
     ai_proxy.start(args['<ai>'], lambda x: push_queue_ai_proxy(x, game_obj))
