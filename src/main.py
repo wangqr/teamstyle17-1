@@ -165,6 +165,9 @@ class Logging:
 
 
 class Game:
+    MAX_DELAY_ROUNDS = 64
+    ROUNDS_PER_SEC = 500
+
     def __init__(self, time_limit=0., seed=None, info_callback=(lambda x: None), start_paused=False, player_num=2,
                  verbose=False):
         if seed is None:
@@ -192,6 +195,7 @@ class Game:
             EndSignalGenerator(game_obj=self, time_limit=time_limit).start()
         self.__mutex = threading.Lock()
         self.end = False
+        self._sync = False
 
     @property
     def seed(self) -> int:
@@ -199,15 +203,23 @@ class Game:
 
     def mainloop(self):
         while not self._time_limit or self.current_time < self._time_limit:
-            while self._queue.empty() and self.__logic_time(self.current_time) == self._last_action_timestamp:
-                pass
-            if self._queue.empty():
+            if self._sync and self._queue.empty():
+                self._sync = False
+                if self.__pause_field == 0:
+                    self._timer.start()
+            next_action = None
+            while next_action is None and (
+                        not self._queue.empty() or self.__logic_time(self.current_time) == self._last_action_timestamp):
+                try:
+                    next_action = self._queue.get(block=True, timeout=self.__timeout_before_next_tick)
+                except queue.Empty:
+                    pass
+            if next_action is None:
                 ret = self._logic.nextTick()
                 self._info_callback(ret)
                 self._last_action_timestamp += 1
+                self._logger.debug('')
                 continue
-            else:
-                next_action = self._queue.get(block=True)
             self._logger.debug('>>>>>>>> recv %s', next_action[2].action_json or '')
             if next_action[2].action_name == '_pause':
                 self.__pause_field ^= (1 << (1 + next_action[2].ai_id))
@@ -223,6 +235,12 @@ class Game:
                 break
             if self.__logic_time(next_action[0]) > self._last_action_timestamp:
                 ret = None
+                if not self._sync and self.__logic_time(
+                        next_action[0]) - self._last_action_timestamp > self.__class__.MAX_DELAY_ROUNDS:
+                    self._timer.stop()
+                    self._sync = True
+                    self._logger.warn('logic is %d rounds slower than main timer, trying to sync by pausing ...',
+                                      self.__logic_time(next_action[0]) - self._last_action_timestamp)
                 while self.__logic_time(next_action[0]) > self._last_action_timestamp:
                     ret = self._logic.nextTick()
                     self._last_action_timestamp += 1
@@ -246,7 +264,11 @@ class Game:
 
     @staticmethod
     def __logic_time(timestamp: float) -> int:
-        return int(timestamp * 30)
+        return int(timestamp * Game.ROUNDS_PER_SEC)
+
+    @property
+    def __timeout_before_next_tick(self):
+        return self.current_time % (1 / self.__class__.ROUNDS_PER_SEC)
 
 
 game_uiobj = None
