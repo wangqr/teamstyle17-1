@@ -6,8 +6,9 @@
 #include "../communicate/basic.h"
 
 // 查询指令
-const MapInfo *UpdateMap();  // 获取视野内的单位信息
-const PlayerStatus *UpdateStatus(int user_id = -1);  // 获取自己的状态
+int GetTime();  // 查询当前游戏时间
+const MapInfo *GetMap();  // 获取视野内的单位信息
+const PlayerStatus *GetStatus(int user_id = -1);  // 获取自己的状态
 
 // 行动指令
 void Move(int user_id, Position des);  // 移动，参数是速度矢量

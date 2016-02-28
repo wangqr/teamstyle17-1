@@ -44,7 +44,7 @@ void LoadPlayerStatus(char *status_str) {
 
 // 以下是选手用
 
-const MapInfo *UpdateMap() {
+const MapInfo *GetMap() {
 	char msg_send[kMaxMessageLength];
 	sprintf(msg_send, "query_map");
 
@@ -55,7 +55,7 @@ const MapInfo *UpdateMap() {
 	return &MAP_;
 }
 
-const PlayerStatus *UpdateStatus(int user_id) {
+const PlayerStatus *GetStatus(int user_id) {
 	char msg_send[kMaxMessageLength];
 	sprintf(msg_send, "query_status %d", user_id);
 
@@ -64,6 +64,18 @@ const PlayerStatus *UpdateStatus(int user_id) {
 
 	LoadPlayerStatus(msg_receive);
 	return &STATUS_;
+}
+
+int GetTime() {
+	char msg_send[kMaxMessageLength];
+	sprintf(msg_send, "query_time");
+
+	char msg_receive[kMaxMessageLength];
+	strcpy(msg_receive, Communicate(msg_send));
+
+	int current_time;
+	sscanf(msg_receive, "%d", &current_time);
+	return current_time;
 }
 
 void Move(int user_id, Position des) {

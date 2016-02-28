@@ -88,6 +88,12 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
         msg_send = r'{"action": "_pause","ai_id": %d}' % ai_id
         enqueue_func(msg_send)
 
+    elif action_name == 'query_time':
+        msg_send = r'{"action": "query_time","ai_id": %d}' % ai_id
+        msg_received = enqueue_func(msg_send)
+        current_time = json.loads(msg_received)['time']  # 返回的字段中应该有 'time'
+        ret = str(int(current_time))
+
     set_string_value(string_buffer, ret)
     return ctypes.addressof(string_buffer)
 
