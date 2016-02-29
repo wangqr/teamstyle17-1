@@ -14,8 +14,7 @@ PlayerStatus STATUS_;
 // 以下是平台用
 
 void LoadMapInfo(char *info_str) {
-	int st = 12, ed = 12, object_counter = 0; // 强行让 time 的字段长为 12
-	sscanf(info_str, "%d", &MAP_.time);
+	int st = 0, ed = 0, object_counter = 0;
 	while (info_str[ed] != 0) {
 		if (info_str[ed] == ';') {  // 不同 Object 的数据以 ';' 分隔
 			info_str[ed] = 0;
@@ -24,16 +23,12 @@ void LoadMapInfo(char *info_str) {
 				&MAP_.objects[object_counter].radius);
 			++object_counter;
 			st = ed + 1;
+		} else if(info_str[ed] == '|') {
+			info_str[ed] = 0;
+			sscanf(info_str + st, "%d", &MAP_.time);
 		}
 		++ed;
 	}
-	if (ed > st) {
-		sscanf(info_str + st, "%d%d%lf%lf%lf%lf", &MAP_.objects[object_counter].id, &MAP_.objects[object_counter].type,
-			&MAP_.objects[object_counter].pos.x, &MAP_.objects[object_counter].pos.y, &MAP_.objects[object_counter].pos.z,
-			&MAP_.objects[object_counter].radius);
-		++object_counter;
-	}
-	MAP_.objects_list_size = object_counter;
 }
 
 void LoadPlayerStatus(char *status_str) {

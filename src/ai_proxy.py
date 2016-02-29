@@ -37,14 +37,14 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
 
     elif action_name == 'query_map':
         assert info['ai_id'] == ai_id
-        ret_str = '%10d |' % info['time']
+        ret_str = '%d|' % info['time']
         ret_values = []
         for obj in info['objects']:
             assert obj['type'] in object_types
             # ret_values.append([int(obj['id']), int(object_types.index(obj['type']))] + obj['pos']] + [obj['r']])
             obj_str = '%d %d %.30f %.30f %.30f %.30f' % (int(obj['id']), int(object_types.index(obj['type'])), obj['pos'][0],obj['pos'][1],obj['pos'][2] , obj['r'])
             ret_values.append(obj_str)
-        ret_str += ';'.join(ret_values)
+        ret_str += ';'.join(ret_values) + ';\n'
 
     return ret_str
 
