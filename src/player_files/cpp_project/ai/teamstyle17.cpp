@@ -12,7 +12,7 @@ Position Displacement(Position src, Position des) {
 	return{ des.x - src.x, des.y - src.y, des.z - src.z };
 }
 
-int UpgradeSkillPrice(SkillType skill, const PlayerStatus *status) {
+int UpgradeSkillPrice(SkillType skill, const PlayerObject *status) {
 	int ret = 0;
 	if (skill == HEALTH_UP) {
 		int level = status->skill_level[HEALTH_UP];

@@ -7,6 +7,7 @@
 
 const int kMapSize = 10000;
 const int kMaxObjectNumber = 10000;
+const int kMaxPlayerObjectNumber = 10;
 
 const double kDeathRatio = 1 / 4;  // 当前生命值与历史最大生命值之比小于此值即告死亡
 const double kEdibleRatio = 5 / 6;  // 目标单位半径与自己单位半径的比值小于此值时可以食用
@@ -64,7 +65,6 @@ const int kBasicSkillPrice[kSkillTypes] = { 1, 1, 2, 2, 2, 1 };
 struct Object {
 	int team_id;
 	int id;
-	int history_max_health;  // -1 表示此属性无效 (不存在 / 不可见)
 	ObjectType type;
 	Position pos;
 	double radius;
@@ -73,15 +73,22 @@ struct Object {
 struct MapInfo {
 	int time;
 	Object objects[kMaxObjectNumber];
-	int objects_list_size;
+	int objects_number;
 };
 
-struct PlayerStatus {  // 根据逻辑 getStatusJson
+struct PlayerObject {
 	int id;
 	int health;
+	int max_health;
 	int vision;
 	int ability; // 技能点
 	int skill_level[kSkillTypes];
+};
+
+struct PlayerStatus {
+	int ai_id;
+	PlayerObject objects[kMaxPlayerObjectNumber];
+	int objects_number;
 };
 
 

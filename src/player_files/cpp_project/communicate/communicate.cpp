@@ -32,9 +32,21 @@ void LoadMapInfo(char *info_str) {
 }
 
 void LoadPlayerStatus(char *status_str) {
-	sscanf(status_str, "%d%d%d%d%d%d%d%d%d%d", &STATUS_.id, &STATUS_.health, &STATUS_.vision, &STATUS_.ability,
-		&STATUS_.skill_level[0], &STATUS_.skill_level[1], &STATUS_.skill_level[2],
-		&STATUS_.skill_level[3], &STATUS_.skill_level[4], &STATUS_.skill_level[5]);
+	int st = 0, ed = 0, object_counter = 0;
+	while (status_str[ed] != 0) {
+		if (status_str[ed] == ';') {  // 不同 Object 的数据以 ';' 分隔
+			status_str[ed] = 0;
+			sscanf(status_str + st, "%d%d%d%d%d%d%d%d%d%d%d", &STATUS_.objects[object_counter].id, &STATUS_.objects[object_counter].health, &STATUS_.objects[object_counter].max_health, &STATUS_.objects[object_counter].vision, &STATUS_.objects[object_counter].ability,
+				&STATUS_.objects[object_counter].skill_level[0], &STATUS_.objects[object_counter].skill_level[1], &STATUS_.objects[object_counter].skill_level[2],
+				&STATUS_.objects[object_counter].skill_level[3], &STATUS_.objects[object_counter].skill_level[4], &STATUS_.objects[object_counter].skill_level[5]);
+			++object_counter;
+			st = ed + 1;
+		} else if (status_str[ed] == '|') {
+			status_str[ed] = 0;
+			sscanf(status_str + st, "%d", &STATUS_.ai_id);
+		}
+		++ed;
+	}
 }
 
 // 以下是选手用

@@ -25,14 +25,14 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
     if action_name == 'query_status':
         skill_levels = dict().fromkeys(skill_types, 0)
         for player in info['players']:
-            if player['id'] == ai_id:
+            if player['ai_id'] == ai_id:
+                ret_str = '%d|' % ai_id
                 for skill in player['skills']:
                     skill_levels[skill['name']] = skill['level']
-                ret_values = [player['id'], player['health'], player['vision'], player['ability']]
+                ret_values = [player['id'], player['health'], player['max_health'], player['vision'], player['ability']]
                 ret_values.extend([skill_levels[skill] for skill in skill_types])
-                assert len(ret_values) == 10  # id, health, vision, ability, 6 个技能的等级
-                ret_str = ' '.join([str(int(x)) for x in ret_values])
-                break
+                assert len(ret_values) == 11  # id, health, max_health, vision, ability, 6 个技能的等级
+                ret_str += ' '.join([str(int(x)) for x in ret_values]) + ';'
         assert ret_str != ''
 
     elif action_name == 'query_map':
