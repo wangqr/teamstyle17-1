@@ -26,9 +26,11 @@ void LoadMapInfo(char *info_str) {
 		} else if(info_str[ed] == '|') {
 			info_str[ed] = 0;
 			sscanf(info_str + st, "%d", &MAP_.time);
+			st = ed + 1;
 		}
 		++ed;
 	}
+	MAP_.objects_number = object_counter;
 }
 
 void LoadPlayerStatus(char *status_str) {
@@ -44,9 +46,11 @@ void LoadPlayerStatus(char *status_str) {
 		} else if (status_str[ed] == '|') {
 			status_str[ed] = 0;
 			sscanf(status_str + st, "%d", &STATUS_.ai_id);
+			st = ed + 1;
 		}
 		++ed;
 	}
+	STATUS_.objects_number = object_counter;
 }
 
 // 以下是选手用
