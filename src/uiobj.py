@@ -68,12 +68,14 @@ class SocketThread(threading.Thread):
                     if __debug__:
                         print('[INFO] platform (UI) Connection reset by peer.')
                     break
-                if data is not None:
-                    ret_json = self.queue_function(data)
-                    action_name = json.loads(data)['action']
-                    ret = load_msg_from_logic(ret_json, action_name)  # 使用和选手接口同样的处理方式 by mxj
-                if ret is not None:
-                    self.clientsocket.send(ret.encode())
+                lines = data.split('\n')
+                for data in lines:  # 这样处理可以吗?
+                    if data is not None:
+                        ret_json = self.queue_function(data)
+                        action_name = json.loads(data)['action']
+                        ret = load_msg_from_logic(ret_json, action_name)  # 使用和选手接口同样的处理方式 by mxj
+                    if ret is not None:
+                        self.clientsocket.send(ret.encode())
 
 
 class UIObject:
