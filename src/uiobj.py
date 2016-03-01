@@ -19,7 +19,7 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
             skill_levels = dict().fromkeys(skill_types, 0)
             for skill in player['skills']:
                 skill_levels[skill['name']] = skill['level']
-            palyer_values = [player['id'], player['health'], player['vision'], player['ability']]
+            palyer_values = [player['id'], player['health'], player['max_health'], player['vision'], player['ability']]
             palyer_values.extend([skill_levels[skill] for skill in skill_types])
             ret_strs.append(' '.join([str(int(x)) for x in palyer_values]))
         ret_str = ';'.join(ret_strs) + ';\n'
