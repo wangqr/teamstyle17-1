@@ -154,6 +154,7 @@ class UIObject(threading.Thread):
             self.send_thread.sig.put(data)
 
     def run(self):
+        self.sig.put(2)
         while 1:
             q = self.sig.get(block=True)
             if q == 0:
