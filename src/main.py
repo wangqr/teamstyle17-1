@@ -285,6 +285,9 @@ def push_queue_ai_proxy(obj: str, game_obj: Game):
     elif act in ["query_map", "query_status"]:
         ret = queue.Queue()
         game_obj.enqueue(timestamp, action.Action(obj, 'query', ret))
+    elif act in ["query_time"]:
+        ret = queue.Queue()
+        game_obj.enqueue(timestamp, action.Action(obj, 'time', ret))
     elif act and act[0] == '_':
         game_obj.enqueue(float(0.),
                          action.Action('{"action":"_platform","ai_id":%d}' % json.loads(obj).get('ai_id'), act, None))
