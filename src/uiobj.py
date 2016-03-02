@@ -32,12 +32,20 @@ class RecvThread(threading.Thread):
                 break
             if data is not None:
                 buf += data
-                buf = buf[buf.find('{'):]
-                p = buf.find('}')
-                while p >= 0:
-                    self.queue_function(buf[:p+1])
-                    buf = buf[buf.find('{', p+1):]
-                    p = buf.find('}')
+                b = buf.find('{')
+                if b < 0:
+                    buf = ''
+                else:
+                    buf = buf[b:]
+                e = buf.find('}')
+                while e >= 0:
+                    self.queue_function(buf[:e+1])
+                    b = buf.find('{', e+1)
+                    if b < 0:
+                        buf = ''
+                    else:
+                        buf = buf[b:]
+                    e = buf.find('}')
         self._send_signal_queue.put(1)
 
 
@@ -59,10 +67,11 @@ class SendThread(threading.Thread):
                 data_type = ''
                 try:
                     j = json.loads(q)
-                    if j.get('players') is not None:
-                        data_type = 'query_status'
-                    elif j.get('objects') is not None:
-                        data_type = 'query_map'
+                    if type(j) == dict:
+                        if j.get('players') is not None:
+                            data_type = 'query_status'
+                        elif j.get('objects') is not None:
+                            data_type = 'query_map'
                 except ValueError:
                     pass
                 if data_type != '':
@@ -150,6 +159,7 @@ class UIObject(threading.Thread):
             self._game_obj.enqueue(timestamp, action.Action(obj, 'query', self.send_thread.sig))
 
     def enqueue(self, data: str):
+        assert type(data) == str
         if self.send_thread and self.send_thread.is_alive():
             self.send_thread.sig.put(data)
 
@@ -160,9 +170,11 @@ class UIObject(threading.Thread):
             if q == 0:
                 break
             if q == 1:
-                main.root_logger.info('[INFO] platform (UI) Connection reset by peer.')
+                main.root_logger.info('platform (UI) Connection reset by peer.')
                 self.__exit_child_threads()
-            self.ui_socket, _ = self.socket.accept()
+            self.ui_socket, address = self.socket.accept()
+            main.root_logger.info('platform (UI) Connection accepted from %s', repr(address))
+            self.sig = queue.Queue()
             self.recv_thread = RecvThread(self.ui_socket, self.sig, self.push_queue_ui)
             self.recv_thread.start()
             self.send_thread = SendThread(self.ui_socket, self.sig)

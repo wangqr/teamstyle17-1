@@ -17,14 +17,14 @@ class Action:
             try:
                 logic.setInstruction(self.action_json)
             except Exception as e:
-                main.root_logger.error('logic exception %s [%s]', (type(e).__name__, str(e)))
+                main.root_logger.error('logic exception %s [%s]', type(e).__name__, str(e))
         elif self.action_name == 'query':
             try:
                 ret = logic.getInstruction(self.action_json)
             except Exception as e:
-                main.root_logger.error('logic exception %s [%s]', (type(e).__name__, str(e)))
+                main.root_logger.error('logic exception %s [%s]', type(e).__name__, str(e))
                 ret = '{"message": "logic exception ' + type(e).__name__ + ' [' + str(e) + ']"}'
-            main.root_logger.debug('core_ret = %s' % repr(ret))
+            main.root_logger.debug('core_ret = %s', repr(ret))
             q = json.loads(ret)
             q['time'] = self.__time_stamp
             self.return_queue.put(json.dumps(q))

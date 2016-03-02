@@ -4,7 +4,7 @@
 """
 usage:
     ts17 [-v|--version] [-h|--help]
-    ts17 run [-d] [-o <repfile>] [-s <seed>] [-t <timelimit>] [-V] <ai> ...
+    ts17 run [-d] [-o <repfile>] [-s <seed>] [-t <timelimit>] [-u <port>] [-V] <ai> ...
     ts17 replay <repfile>
 
 options:
@@ -12,10 +12,10 @@ options:
     -v, --version  show current version
 
     -d             enable debug mode, allow programmatically pause the game
-    -o <repfile>   log to file, if file name is not specified, current time
-                   will be used
+    -o <repfile>   sve game replay to file
     -s <seed>      specify the map seed
     -t <timelimit> set the time limit of the game in seconds
+    -u <port>      open UI socket on the specified port
     -V             verbose output
 """
 
@@ -165,8 +165,8 @@ class Logging:
 
 
 class Game:
-    MAX_DELAY_ROUNDS = 64
-    ROUNDS_PER_SEC = 500
+    MAX_DELAY_ROUNDS = 1
+    ROUNDS_PER_SEC = 100
 
     def __init__(self, time_limit=0., seed=None, info_callback=(lambda x: None), start_paused=False, player_num=2,
                  verbose=False):
@@ -180,7 +180,7 @@ class Game:
         self._logger.info('game seed = %d', self._seed)
         self._logger.basic_config(level=Logging.DEBUG if verbose else Logging.INFO)
         self._time_limit = time_limit
-        self._logic = ts17core.interface.Interface(info_callback)
+        self._logic = ts17core.interface.Interface(self.__info_callback)
         init_json = '{"action":"init","seed":' + str(self._seed) + ',"player":' + str(player_num) + '}'
         self._logic.setInstruction(init_json)
         self._queue = queue.PriorityQueue()
@@ -215,8 +215,7 @@ class Game:
                 except queue.Empty:
                     pass
             if next_action is None:
-                ret = self._logic.nextTick()
-                self._info_callback(ret)
+                self._logic.nextTick()
                 self._last_action_timestamp += 1
                 self._logger.debug('')
                 continue
@@ -234,7 +233,6 @@ class Game:
                 self._logger.debug('<<<<<<<< fin')
                 break
             if self.__logic_time(next_action[0]) > self._last_action_timestamp:
-                ret = None
                 if not self._sync and self.__logic_time(
                         next_action[0]) - self._last_action_timestamp > self.__class__.MAX_DELAY_ROUNDS:
                     self._timer.stop()
@@ -242,9 +240,8 @@ class Game:
                     self._logger.warn('logic is %d rounds slower than main timer, trying to sync by pausing ...',
                                       self.__logic_time(next_action[0]) - self._last_action_timestamp)
                 while self.__logic_time(next_action[0]) > self._last_action_timestamp:
-                    ret = self._logic.nextTick()
+                    self._logic.nextTick()
                     self._last_action_timestamp += 1
-                self._info_callback(ret)
             next_action[2].set_timestamp(self._last_action_timestamp)
             if next_action[2].action_name != 'query':
                 # run_logger.log_action(next_action[2])
@@ -270,8 +267,10 @@ class Game:
     def __timeout_before_next_tick(self):
         return self.current_time % (1 / self.__class__.ROUNDS_PER_SEC)
 
+    def __info_callback(self, obj: str):
+        self._info_callback(obj)
 
-game_uiobj = None
+
 root_logger = Logging()
 
 
@@ -310,8 +309,13 @@ def main():
         docopt.docopt(__doc__, argv=['-h'])
 
 
+def info_call_back(ui_obj, obj: str):
+    global root_logger
+    root_logger.debug('core info %s', obj)
+    ui_obj.enqueue(obj)
+
+
 def run_main(args: dict):
-    global game_uiobj
     global root_logger
 
     root_logger.basic_config(level=(Logging.DEBUG if args['-V'] else Logging.INFO))
@@ -323,13 +327,16 @@ def run_main(args: dict):
     ai_proxy.start(args['<ai>'], lambda x: push_queue_ai_proxy(x, game_obj))
 
     # init ui
-    game_uiobj = uiobj.UIObject(lambda x: push_queue_ai_proxy(x, game_obj), ai_id=-1)
+    if args['-u']:
+        game_ui_obj = uiobj.UIObject(game_obj, ai_id=-1, port=int(args['-u']))
+        game_obj._info_callback = lambda x: info_call_back(game_ui_obj, x)
+        game_ui_obj.start()
 
     # main loop
     game_obj.mainloop()
 
     # exit ui thread
-    game_uiobj.exit()
+    game_ui_obj.exit()
 
     # ai_proxy.stopAI()
     root_logger.info('quit.')
