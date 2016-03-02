@@ -5,8 +5,8 @@
 
 import ctypes
 import json
+import sys
 from threading import Thread
-from multiprocessing import Process
 
 max_message_length = 10000
 
@@ -22,30 +22,39 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
     info = json.loads(msg)
     ret_str = ''
 
-    if action_name == 'query_status':
-        skill_levels = dict().fromkeys(skill_types, 0)
-        for player in info['players']:
-            if player['ai_id'] == ai_id:
-                ret_str = '%d|' % ai_id
-                for skill in player['skills']:
-                    skill_levels[skill['name']] = skill['level']
-                ret_values = [player['id'], player['health'], player['max_health'], player['vision'], player['ability']]
-                ret_values.extend([skill_levels[skill] for skill in skill_types])
-                assert len(ret_values) == 11  # id, health, max_health, vision, ability, 6 个技能的等级
-                ret_str += ' '.join([str(int(x)) for x in ret_values]) + ';'
-        assert ret_str != ''
+    # print('[INFO] %s called by ai %d' % (action_name, ai_id))
+    # print('[INFO] msg from logic [%s]' % msg)
 
-    elif action_name == 'query_map':
-        assert info['ai_id'] == ai_id
-        ret_str = '%d|' % info['time']
-        ret_values = []
-        for obj in info['objects']:
-            assert obj['type'] in object_types
-            # ret_values.append([int(obj['id']), int(object_types.index(obj['type']))] + obj['pos']] + [obj['r']])
-            obj_str = '%d %d %.30f %.30f %.30f %.30f' % (int(obj['id']), int(object_types.index(obj['type'])), obj['pos'][0],obj['pos'][1],obj['pos'][2] , obj['r'])
-            ret_values.append(obj_str)
-        ret_str += ';'.join(ret_values) + ';\n'
+    try:
+        if action_name == 'query_status':
+            skill_levels = dict().fromkeys(skill_types, 0)
+            ret_str = '%d|' % ai_id
+            for player in info['players']:
+                if int(player['ai_id']) == ai_id:
+                    for skill in player['skills']:
+                        skill_levels[skill['name']] = skill['level']
+                    ret_values = [player['id'], player['health'], player['max_health'], player['vision'], player['ability']]
+                    ret_values.extend([skill_levels[skill] for skill in skill_types])
+                    assert len(ret_values) == 11  # id, health, max_health, vision, ability, 6 个技能的等级
+                    ret_str += ' '.join([str(int(x)) for x in ret_values]) + ';'
 
+        elif action_name == 'query_map':
+            assert int(info['ai_id']) == ai_id
+            ret_str = '%d|' % info['time']
+            ret_values = []
+            for obj in info['objects']:
+                assert obj['type'] in object_types
+                # ret_values.append([int(obj['id']), int(object_types.index(obj['type']))] + obj['pos']] + [obj['r']])
+                obj_str = '%d %d %.10f %.10f %.10f %.10f' % (int(obj['id']), int(object_types.index(obj['type'])), obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'])
+                ret_values.append(obj_str)
+            ret_str += ';'.join(ret_values)
+            if info['objects']:
+                ret_str += ';'
+
+    except KeyError as err:
+        print('[ERROR] ai_proxy exception %s [%s]', (type(err).__name__, str(err)))
+
+    # print("[INFO] ret for dll [%s]" % ret_str)
     return ret_str
 
 
@@ -121,25 +130,27 @@ class AICore(object):
         c_communicate = ctypes.CFUNCTYPE(ctypes.c_char_p, ctypes.c_char_p)(communicate)
 
         # Start AI
-        self.dll_main(c_communicate, self.id)
+        try:
+            self.dll_main(c_communicate, self.id)
+        except Exception as err:
+            print('[ERROR] ai%d exception %s [%s]' % (self.id, err.__name__, str(err)))
+        finally:
+            print('[INFO] ai%d exit.' % self.core.id)
+            sys.exit()
 
 
 class AIThread(object):
-    def __init__(self, core, enqueue_func, method='thread'):
+    def __init__(self, core):
         assert isinstance(core, AICore)
         self.core = core
-        self.method = Process if method == 'process' else Thread
         self.ai_thread = None
 
     def create_thread(self, enqueue_func):
-        self.ai_thread = self.method(target=self.core.start_ai, args=(enqueue_func,), name='ai%d' % self.core.id)
+        self.ai_thread = Thread(target=self.core.start_ai, args=(enqueue_func,), name='ai%d' % self.core.id)
 
     def start(self):
         # Start AI thread
-        try:
-            self.ai_thread.start()
-        except Exception as error:  # TODO: Deal with runtime errors
-            raise error
+        self.ai_thread.start()
 
 
 def start(ai_paths, enqueue_func):
@@ -153,12 +164,10 @@ def start(ai_paths, enqueue_func):
 
     assert isinstance(ai_paths, list)
 
-    method = 'thread'
-
     # Create AI threads
     ai_threads = []
     for ai_id, path in enumerate(ai_paths):
-        ai_threads.append(AIThread(AICore(ai_id, path), method))
+        ai_threads.append(AIThread(AICore(ai_id, path)))
         ai_threads[ai_id].create_thread(enqueue_func)
 
     # Start AI Threads

@@ -91,13 +91,13 @@ int GetTime() {
 
 void Move(int user_id, Position des) {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "move %d %.30f %.30f %.30f", user_id, des.x, des.y, des.z);
+	sprintf(msg_send, "move %d %.10f %.10f %.10f", user_id, des.x, des.y, des.z);
 	Communicate(msg_send);
 }
 
 void UseSkill(SkillType skill, int user_id, int target_id, Position des) {
 	char msg_send[kMaxMessageLength];
-	sprintf(msg_send, "use_skill %d %d %d %.30f %.30f %.30f", skill, user_id, target_id, des.x, des.y, des.z);
+	sprintf(msg_send, "use_skill %d %d %d %.10f %.10f %.10f", skill, user_id, target_id, des.x, des.y, des.z);
 	Communicate(msg_send);
 }
 
