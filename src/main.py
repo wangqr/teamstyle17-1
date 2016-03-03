@@ -221,7 +221,7 @@ class Game:
                 continue
             self._logger.debug('>>>>>>>> recv %s', next_action[2].action_json or '')
             if next_action[2].action_name == '_pause':
-                self.__pause_field ^= (1 << (1 + next_action[2].ai_id))
+                self.__pause_field ^= (1 << (1 + json.loads(next_action[2].action_json)['ai_id']))
                 if self.__pause_field:
                     self._timer.stop()
                 else:
