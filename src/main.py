@@ -12,7 +12,7 @@ options:
     -v, --version  show current version
 
     -d             enable debug mode, allow programmatically pause the game
-    -o <repfile>   sve game replay to file
+    -o <repfile>   save game replay to file
     -s <seed>      specify the map seed
     -t <timelimit> set the time limit of the game in seconds
     -u <port>      open UI socket on the specified port
