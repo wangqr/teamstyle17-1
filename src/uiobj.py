@@ -39,8 +39,8 @@ class RecvThread(threading.Thread):
                     buf = buf[b:]
                 e = buf.find('}')
                 while e >= 0:
-                    self.queue_function(buf[:e+1])
-                    b = buf.find('{', e+1)
+                    self.queue_function(buf[:e + 1])
+                    b = buf.find('{', e + 1)
                     if b < 0:
                         buf = ''
                     else:
@@ -113,7 +113,8 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
             assert obj['type'] in object_types
             # ret_values.append([int(obj['id']), int(object_types.index(obj['type']))] + obj['pos']] + [obj['r']])
             obj_str = '%d %d %.30f %.30f %.30f %.30f' % (
-                int(obj['id']), int(object_types.index(obj['type'])), obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'])
+                int(obj['id']), int(object_types.index(obj['type'])), obj['pos'][0], obj['pos'][1], obj['pos'][2],
+                obj['r'])
             ret_strs.append(obj_str)
         ret_str += ';'.join(ret_strs) + ';\n'
 
@@ -146,8 +147,10 @@ class UIObject(threading.Thread):
             self.recv_thread.sig.put(0)
         if self.send_thread and self.send_thread.is_alive():
             self.send_thread.sig.put(0)
-        self.recv_thread.join()
-        self.send_thread.join()
+        if self.recv_thread:
+            self.recv_thread.join()
+        if self.send_thread:
+            self.send_thread.join()
 
     def push_queue_ui(self, obj: str):
         json_obj = json.loads(obj)
@@ -172,10 +175,13 @@ class UIObject(threading.Thread):
             if q == 1:
                 main.root_logger.info('platform (UI) Connection reset by peer.')
                 self.__exit_child_threads()
-            self.ui_socket, address = self.socket.accept()
-            main.root_logger.info('platform (UI) Connection accepted from %s', repr(address))
-            self.sig = queue.Queue()
-            self.recv_thread = RecvThread(self.ui_socket, self.sig, self.push_queue_ui)
-            self.recv_thread.start()
-            self.send_thread = SendThread(self.ui_socket, self.sig)
-            self.send_thread.start()
+            try:
+                self.ui_socket, address = self.socket.accept()
+                main.root_logger.info('platform (UI) Connection accepted from %s', repr(address))
+                self.sig = queue.Queue()
+                self.recv_thread = RecvThread(self.ui_socket, self.sig, self.push_queue_ui)
+                self.recv_thread.start()
+                self.send_thread = SendThread(self.ui_socket, self.sig)
+                self.send_thread.start()
+            except OSError:
+                break

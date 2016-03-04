@@ -4,15 +4,14 @@
 """
 usage:
     ts17 [-v|--version] [-h|--help]
-    ts17 run [-d] [-o <repfile>] [-s <seed>] [-t <timelimit>] [-u <port>] [-V] <ai> ...
-    ts17 replay <repfile>
+    ts17 run [-r <repfile>] [-s <seed>] [-t <timelimit>] [-u <port>] [-V] <ai> ...
+    ts17 replay [-u <port>] [-V] <repfile>
 
 options:
     -h, --help     show this message
     -v, --version  show current version
 
-    -d             enable debug mode, allow programmatically pause the game
-    -o <repfile>   save game replay to file
+    -r <repfile>   specify the name of the rep file
     -s <seed>      specify the map seed
     -t <timelimit> set the time limit of the game in seconds
     -u <port>      open UI socket on the specified port
@@ -20,6 +19,7 @@ options:
 """
 
 import docopt
+import gzip
 import queue
 import json
 import random
@@ -32,8 +32,7 @@ import threading
 import ai_proxy
 import action
 import uiobj
-#   Bug remain
-# import logger
+import logger
 
 import ts17core
 import ts17core.interface
@@ -79,6 +78,10 @@ class Timer:
     @property
     def current_time(self):
         return self.elapsed if self._start is None else self.elapsed + self._func() - self._start
+
+    @current_time.setter
+    def current_time(self, value: float):
+        self.elapsed += value - self.current_time
 
     def __enter__(self):
         self.start()
@@ -168,40 +171,39 @@ class Game:
     MAX_DELAY_ROUNDS = 1
     ROUNDS_PER_SEC = 100
 
-    def __init__(self, time_limit=0., seed=None, info_callback=(lambda x: None), start_paused=False, player_num=2,
-                 verbose=False):
+    def __init__(self, rep_file_name, time_limit=0., seed=None, start_paused=False, player_num=2, verbose=False):
         if seed is None:
             seed = random.randrange(0, 4294967296)
         self._seed = seed
         self._timer = Timer()
-        self._info_callback = info_callback
+        self._info_callback = lambda _: None
         self._logger = Logging(
             timer=lambda: '%d @ %.6f' % (self.__logic_time(self._timer.current_time), self._timer.current_time))
         self._logger.info('game seed = %d', self._seed)
         self._logger.basic_config(level=Logging.DEBUG if verbose else Logging.INFO)
+        self._run_logger = logger.RunLogger(filename=rep_file_name)
+        self._run_logger.start()
         self._time_limit = time_limit
         self._logic = ts17core.interface.Interface(self.__info_callback)
         init_json = '{"action":"init","seed":' + str(self._seed) + ',"player":' + str(player_num) + '}'
         self._logic.setInstruction(init_json)
+        self._run_logger.sig.put(init_json)
         self._queue = queue.PriorityQueue()
         self._last_action_timestamp = 0
         self.__action_count = 0
-        if not start_paused:
+        self._start_paused = start_paused
+        self.__pause_field = 0
+        if time_limit:
+            EndSignalGenerator(game_obj=self, time_limit=time_limit).start()
+        self.__mutex = threading.Lock()
+        self._sync = False
+
+    def mainloop(self):
+        if not self._start_paused:
             self.__pause_field = 0
             self._timer.start()
         else:
             self.__pause_field = 1
-        if time_limit:
-            EndSignalGenerator(game_obj=self, time_limit=time_limit).start()
-        self.__mutex = threading.Lock()
-        self.end = False
-        self._sync = False
-
-    @property
-    def seed(self) -> int:
-        return self._seed
-
-    def mainloop(self):
         while not self._time_limit or self.current_time < self._time_limit:
             if self._sync and self._queue.empty():
                 self._sync = False
@@ -243,11 +245,13 @@ class Game:
                     self._logic.nextTick()
                     self._last_action_timestamp += 1
             next_action[2].set_timestamp(self._last_action_timestamp)
-            if next_action[2].action_name != 'query':
-                # run_logger.log_action(next_action[2])
-                pass
+            if next_action[2].action_name == 'instruction':
+                self._run_logger.sig.put(next_action[2].action_json)
             next_action[2].run(self._logic)
             self._logger.debug('<<<<<<<< fin')
+        self._logger.info('clean up')
+        self._run_logger.exit()
+        self._run_logger.join()
 
     def enqueue(self, timestamp, act):
         self.__mutex.acquire()
@@ -268,6 +272,8 @@ class Game:
         return self.current_time % (1 / self.__class__.ROUNDS_PER_SEC)
 
     def __info_callback(self, obj: str):
+        if obj.find('"end"') >= 0:
+            self.enqueue(0, action.Action('{"action":"_platform"}', "_end", None))
         self._info_callback(obj)
 
 
@@ -299,6 +305,9 @@ def push_queue_ai_proxy(obj: str, game_obj: Game):
 
 
 def main():
+    #  uncomment the following line before release
+    # sys.excepthook = lambda _1, _2, _3: None
+
     args = docopt.docopt(__doc__,
                          version='ts17-platform ' + __version__ + ' [ts17-core ver ' + ts17core.__version__ + ']')
     if args['run']:
@@ -319,14 +328,19 @@ def run_main(args: dict):
     global root_logger
 
     root_logger.basic_config(level=(Logging.DEBUG if args['-V'] else Logging.INFO))
+    rep_file_name = args['-r'] or ('ts17_' + time.strftime('%m%d%H%M%S') + '.rpy')
+
+    if not rep_file_name.endswith('.rpy'):
+        rep_file_name += '.rpy'
 
     game_obj = Game(time_limit=float(args['-t'] or 0), seed=int(args['-s']) if args['-s'] else None,
-                    player_num=len(args['<ai>']), verbose=args['-V'])
+                    player_num=len(args['<ai>']), verbose=args['-V'], rep_file_name=rep_file_name)
 
     # init ai_proxy
     ai_proxy.start(args['<ai>'], lambda x: push_queue_ai_proxy(x, game_obj))
 
     # init ui
+    game_ui_obj = None
     if args['-u']:
         game_ui_obj = uiobj.UIObject(game_obj, ai_id=-1, port=int(args['-u']))
         game_obj._info_callback = lambda x: info_call_back(game_ui_obj, x)
@@ -336,7 +350,8 @@ def run_main(args: dict):
     game_obj.mainloop()
 
     # exit ui thread
-    game_ui_obj.exit()
+    if game_ui_obj and game_ui_obj.is_alive():
+        game_ui_obj.exit()
 
     # ai_proxy.stopAI()
     root_logger.info('quit.')
@@ -346,8 +361,38 @@ def run_main(args: dict):
 
 
 def replay_main(args: dict):
-    pass
+    global root_logger
 
+    root_logger.basic_config(level=(Logging.DEBUG if args['-V'] else Logging.INFO))
+    rep_file_name = args['<repfile>']
+
+    if not rep_file_name.endswith('.rpy'):
+        rep_file_name += '.rpy'
+
+    game_obj = logger.RepGame(verbose=args['-V'])
+    with gzip.open(rep_file_name, 'rt', encoding='utf-8') as rep_file:
+        for line in rep_file:
+            j = json.loads(line)
+            t = j.get('time')
+            if t is None:
+                t = 0
+            game_obj.queue.put((t, action.Action(line, 'instruction', None)))
+
+    game_ui_obj = None
+    if args['-u']:
+        game_ui_obj = uiobj.UIObject(game_obj, ai_id=-1, port=int(args['-u']))
+        game_obj._info_callback = lambda x: info_call_back(game_ui_obj, x)
+        game_ui_obj.start()
+
+    game_obj.mainloop()
+
+    if game_ui_obj and game_ui_obj.is_alive():
+        game_ui_obj.exit()
+
+    root_logger.info('quit.')
+
+    time.sleep(0.3)
+    os.kill(os.getpid(), signal.SIGTERM)
 
 if __name__ == '__main__':
     main()
