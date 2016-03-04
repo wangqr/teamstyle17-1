@@ -72,6 +72,9 @@ class SendThread(threading.Thread):
                             data_type = 'query_status'
                         elif j.get('objects') is not None:
                             data_type = 'query_map'
+                    if type(j) == list:
+                        data_type = 'info_add'
+
                 except ValueError:
                     pass
                 if data_type != '':
@@ -90,35 +93,81 @@ class SendThread(threading.Thread):
 
 def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移植过来
     skill_types = ['longAttack', 'shortAttack', 'shield', 'teleport', 'visionUp', 'healthUp']
-    object_types = ['player', 'food', 'nutrient', 'spike', 'target', 'bullet']
+    object_types = ['player', 'food', 'nutrient', 'spike', 'target', 'bullet', 'source']
+    info_types = ['object', 'delete', 'player', 'skill_cast', 'skill_hit', 'end']
 
-    info = json.loads(msg)
     ret_str = ''
+    ret_str_list = []
 
     if action_name == 'query_status':
-        ret_strs = []
+        ret_str_list.append('s')
+        info = json.loads(msg)
+        ret_str_list.append('%d|' % info['time'])
         for player in info['players']:
-            skill_levels = dict().fromkeys(skill_types, 0)
+            skill_levels = [-1] * 6  # 默认 -1 表示不改变
             for skill in player['skills']:
-                skill_levels[skill['name']] = skill['level']
-            palyer_values = [player['id'], player['health'], player['max_health'], player['vision'], player['ability']]
-            palyer_values.extend([skill_levels[skill] for skill in skill_types])
-            ret_strs.append(' '.join([str(int(x)) for x in palyer_values]))
-        ret_str = ';'.join(ret_strs) + ';\n'
+                index = skill_types.index(skill['name'])
+                skill_levels[index] = skill['level']
+                s = '%d %d %d %d %d %.10f %.10f %.10f %d %d %d %d %d %d;' % (
+                    info['id'], info['ai_id'], info['health'], info['vision'], info['ability'], info['speed'][0], info['speed'][1], info['speed'][2],
+                    skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5])
+            ret_str_list.append(s)
+        ret_str = ' '.join(ret_str_list) + '#\n'
 
     elif action_name == 'query_map':
-        ret_str = '%d|' % info['time']
-        ret_strs = []
+        ret_str_list.append('m')
+        ret_str_list.append('%d|' % info['time'])
         for obj in info['objects']:
-            assert obj['type'] in object_types
-            # ret_values.append([int(obj['id']), int(object_types.index(obj['type']))] + obj['pos']] + [obj['r']])
-            obj_str = '%d %d %.30f %.30f %.30f %.30f' % (
-                int(obj['id']), int(object_types.index(obj['type'])), obj['pos'][0], obj['pos'][1], obj['pos'][2],
-                obj['r'])
-            ret_strs.append(obj_str)
-        ret_str += ';'.join(ret_strs) + ';\n'
+            s = '%d %d %.30f %.30f %.30f %.30f;' % (
+                int(obj['id']), int(object_types.index(obj['type'])), obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'])
+            ret_str_list.append(s)
+        ret_str = ' '.join(ret_str_list) + '#\n'
 
-    return ret_str  # ret_str 的末尾有一个 \n
+    elif action_name == 'info_add':
+        ret_str_list.append('a')
+        info_list = json.loads(msg)
+        for info in info_list:
+            if info['info'] == 'object':
+                s = '%d %d %d %d %d %.10f %.10f %.10f %.10f;' % (
+                    info_types.index(info['info']), info['time'], info['id'], info['ai_id'], object_types.index(info['type']),
+                    info['pos'][0], info['pos'][1], info['pos'][2], info['r'])
+                ret_str_list.append(s)
+
+            elif info['info'] == 'delete':
+                s = '%d %d %d;' % (
+                    info_types.index(info['info']), info['time'], info['id'])
+                ret_str_list.append(s)
+
+            elif info['info'] == 'player':
+                skill_levels = [-1] * 6  # 默认 -1 表示不改变
+                for skill in info['skills']:
+                    index = skill_types.index(skill['name'])
+                    skill_levels[index] = skill['level']
+                s = '%d %d %d %d %d %d %d %.10f %.10f %.10f %d %d %d %d %d %d;' % (
+                    info_types.index(info['info']), info['time'], info['id'], info['ai_id'], info['health'], info['vision'], info['ability'],
+                    info['speed'][0], info['speed'][1], info['speed'][2],
+                    skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5])
+                ret_str_list.append(s)
+
+            elif info['info'] == 'skill_cast':
+                s = '%d %d %d %d %d %.10f %.10f %.10f;' % (
+                    info_types.index(info['info']), info['time'], info['source'], skill_types.index(info['type']),
+                    info['target'], info['x'], info['y'], info['z'])
+                ret_str_list.append(s)
+
+            elif info['info'] == 'skill_hit':
+                s = '%d %d %d %d;' % (
+                    info_types.index(info['info']), info['time'], skill_types.index(info['type']), info['target'])
+                ret_str_list.append(s)
+
+            elif info['info'] == 'end':
+                s = '%d %d %d;' % (
+                    info_types.index(info['info']), info['time'], info['ai_id'])
+                ret_str_list.append(s)
+
+            ret_str = ' '.join(ret_str_list) + '#\n'
+
+    return ret_str
 
 
 class UIObject(threading.Thread):
