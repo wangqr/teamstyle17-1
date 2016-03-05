@@ -111,8 +111,8 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
                 skill_levels[index] = skill['level']
                 skill_cds[index] = skill['cd']
             s = '%d %d %d %d %d %d %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d;' % (
-                info['id'], info['ai_id'], info['health'], info['max_health'], info['vision'], info['ability'],
-                info['r'], info['pos'][0], info['pos'][1], info['pos'][2], info['speed'][0], info['speed'][1], info['speed'][2],
+                player['id'], player['ai_id'], player['health'], player['max_health'], player['vision'], player['ability'],
+                player['r'], player['pos'][0], player['pos'][1], player['pos'][2], player['speed'][0], player['speed'][1], player['speed'][2],
                 skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5],
                 skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5])
             ret_str_list.append(s)

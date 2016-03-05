@@ -6,6 +6,7 @@
 import ctypes
 import json
 import sys
+import queue
 from threading import Thread
 
 max_message_length = 10000
@@ -38,9 +39,9 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
                     index = skill_types.index(skill['name'])
                     skill_levels[index] = skill['level']
                     skill_cds[index] = skill['cd']
-                s = '%d %d %d %d %d %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d;' % (
-                    info['id'], info['health'], info['vision'], info['ability'], info['r'],
-                    info['pos'][0], info['pos'][1], info['pos'][2], info['speed'][0], info['speed'][1], info['speed'][2],
+                s = '%d %d %d %d %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d;' % (
+                    player['id'], player['health'], player['vision'], player['ability'], player['r'],
+                    player['pos'][0], player['pos'][1], player['pos'][2], player['speed'][0], player['speed'][1], player['speed'][2],
                     skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5],
                     skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5])
                 ret_str_list.append(s)
@@ -49,8 +50,9 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
         elif action_name == 'query_map':
             ret_str_list.append('%d|' % info['time'])
             for obj in info['objects']:
-                s = '%d %d %d %.30f %.30f %.30f %.30f;' % (
-                    int(obj['id']), int(obj['ai_id']), int(object_types.index(obj['type'])), obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'])
+                s = '%d %d %d %.30f %.30f %.30f %.30f %d %d;' % (
+                    int(obj['id']), int(obj['ai_id']), int(object_types.index(obj['type'])),
+                    obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'], obj['longattackcasting'], obj['shieldtime'])
                 ret_str_list.append(s)
             ret_str = ' '.join(ret_str_list)
 
@@ -125,6 +127,7 @@ class AICore(object):
         return dll_main
 
     def start_ai(self, enqueue_func):
+
         def communicate(dll_message):
             # Also pass to dll_main
             assert isinstance(dll_message, bytes)
@@ -149,7 +152,7 @@ class AIThread(object):
         self.ai_thread = None
 
     def create_thread(self, enqueue_func):
-        self.ai_thread = Thread(target=self.core.start_ai, args=(enqueue_func,), name='ai%d' % self.core.id)
+        self.ai_thread = Thread(target=self.core.start_ai, args=(enqueue_func), name='ai%d' % self.core.id, daemon=True)
 
     def start(self):
         # Start AI thread

@@ -68,6 +68,8 @@ struct Object {
 	ObjectType type;
 	Position pos;
 	double radius;
+	int shield_time;
+	int long_attack_casting;
 };
 
 struct MapInfo {
