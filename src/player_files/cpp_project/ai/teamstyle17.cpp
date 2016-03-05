@@ -9,7 +9,8 @@ double Distance(Position pos1, Position pos2) {
 }
 
 Position Displacement(Position src, Position des) {
-	return{ des.x - src.x, des.y - src.y, des.z - src.z };
+	Position d = { des.x - src.x, des.y - src.y, des.z - src.z };
+	return d;
 }
 
 int UpgradeSkillPrice(SkillType skill, const PlayerObject *status) {
