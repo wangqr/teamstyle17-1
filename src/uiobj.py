@@ -110,8 +110,9 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
                 index = skill_types.index(skill['name'])
                 skill_levels[index] = skill['level']
                 skill_cds[index] = skill['cd']
-            s = '%d %d %d %d %d %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d;' % (
-                info['id'], info['ai_id'], info['health'], info['vision'], info['ability'], info['speed'][0], info['speed'][1], info['speed'][2],
+            s = '%d %d %d %d %d %d %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d;' % (
+                info['id'], info['ai_id'], info['health'], info['max_health'], info['vision'], info['ability'],
+                info['r'], info['pos'][0], info['pos'][1], info['pos'][2], info['speed'][0], info['speed'][1], info['speed'][2],
                 skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5],
                 skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5])
             ret_str_list.append(s)
@@ -122,8 +123,8 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
         info = json.loads(msg)
         ret_str_list.append('%d|' % info['time'])
         for obj in info['objects']:
-            s = '%d %d %.30f %.30f %.30f %.30f;' % (
-                int(obj['id']), int(object_types.index(obj['type'])), obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'])
+            s = '%d %d %d %.30f %.30f %.30f %.30f;' % (
+                int(obj['id']), int(obj['ai_id']), int(object_types.index(obj['type'])), obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'])
             ret_str_list.append(s)
         ret_str = ' '.join(ret_str_list) + '#\n'
 
@@ -148,9 +149,9 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
                     index = skill_types.index(skill['name'])
                     skill_levels[index] = skill['level']
                     skill_cds[index] = skill['cd']
-                s = '%d %d %d %d %d %d %d %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d;' % (
-                    info_types.index(info['info']), info['time'], info['id'], info['ai_id'], info['health'], info['vision'], info['ability'],
-                    info['speed'][0], info['speed'][1], info['speed'][2],
+                s = '%d %d %d %d %d %d %d %d %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d;' % (
+                    info_types.index(info['info']), info['time'], info['id'], info['ai_id'], info['health'], info['max_health'], info['vision'], info['ability'],
+                    info['r'], info['pos'][0], info['pos'][1], info['pos'][2], info['speed'][0], info['speed'][1], info['speed'][2],
                     skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5],
                     skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5])
                 ret_str_list.append(s)

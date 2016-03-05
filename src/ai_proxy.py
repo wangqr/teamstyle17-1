@@ -21,35 +21,38 @@ def set_string_value(buffer, string):
 def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=None):
     info = json.loads(msg)
     ret_str = ''
+    ret_str_list = []
 
     # print('[INFO] %s called by ai %d' % (action_name, ai_id))
     # print('[INFO] msg from logic [%s]' % msg)
 
     try:
         if action_name == 'query_status':
-            skill_levels = dict().fromkeys(skill_types, 0)
-            ret_str = '%d|' % ai_id
+            ret_str_list.append('%d|' % ai_id)
             for player in info['players']:
-                if int(player['ai_id']) == ai_id:
-                    for skill in player['skills']:
-                        skill_levels[skill['name']] = skill['level']
-                    ret_values = [player['id'], player['health'], player['max_health'], player['vision'], player['ability']]
-                    ret_values.extend([skill_levels[skill] for skill in skill_types])
-                    assert len(ret_values) == 11  # id, health, max_health, vision, ability, 6 个技能的等级
-                    ret_str += ' '.join([str(int(x)) for x in ret_values]) + ';'
+                if player['ai_id'] != ai_id:
+                    continue
+                skill_levels = [-1] * 6  # 默认 -1 表示不改变
+                skill_cds = [-1] * 6  # 同上
+                for skill in player['skills']:
+                    index = skill_types.index(skill['name'])
+                    skill_levels[index] = skill['level']
+                    skill_cds[index] = skill['cd']
+                s = '%d %d %d %d %d %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d;' % (
+                    info['id'], info['health'], info['vision'], info['ability'], info['r'],
+                    info['pos'][0], info['pos'][1], info['pos'][2], info['speed'][0], info['speed'][1], info['speed'][2],
+                    skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5],
+                    skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5])
+                ret_str_list.append(s)
+            ret_str = ' '.join(ret_str_list)
 
         elif action_name == 'query_map':
-            # assert int(info['ai_id']) == ai_id
-            ret_str = '%d|' % info['time']
-            ret_values = []
+            ret_str_list.append('%d|' % info['time'])
             for obj in info['objects']:
-                assert obj['type'] in object_types
-                # ret_values.append([int(obj['id']), int(object_types.index(obj['type']))] + obj['pos']] + [obj['r']])
-                obj_str = '%d %d %.10f %.10f %.10f %.10f' % (int(obj['id']), int(object_types.index(obj['type'])), obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'])
-                ret_values.append(obj_str)
-            ret_str += ';'.join(ret_values)
-            if info['objects']:
-                ret_str += ';'
+                s = '%d %d %d %.30f %.30f %.30f %.30f;' % (
+                    int(obj['id']), int(obj['ai_id']), int(object_types.index(obj['type'])), obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'])
+                ret_str_list.append(s)
+            ret_str = ' '.join(ret_str_list)
 
     except KeyError as err:
         print('[ERROR] ai_proxy exception %s [%s]' % (type(err).__name__, str(err)))
@@ -76,20 +79,20 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
 
     elif action_name == 'move':
         info_send = dict(action='move', time=0, ai_id=ai_id, id=int(msg[0]), x=float(msg[1]), y=float(msg[2]), z=float(msg[3]))
-        info_send['id'] = int(msg[0]) if int(msg[0]) != -1 else ai_id + 1 # For Debug
+        info_send['id'] = int(msg[0]) if int(msg[0]) != -1 else ai_id + 1  # For Debug
         msg_send = json.dumps(info_send)
         enqueue_func(msg_send)
 
     elif action_name == 'use_skill' and int(msg[0]) in range(4):  # 技能在技能列表中
         info_send = dict(action='use_skill', time=0, ai_id=ai_id, skill_type=skill_types[int(msg[0])],
                          id=int(msg[1]), target=int(msg[2]), x=float(msg[3]), y=float(msg[4]), z=float(msg[5]))
-        info_send['id'] = int(msg[1]) if int(msg[1]) != -1 else ai_id + 1 # For Debug
+        info_send['id'] = int(msg[1]) if int(msg[1]) != -1 else ai_id + 1  # For Debug
         msg_send = json.dumps(info_send)
         enqueue_func(msg_send)
 
     elif action_name == 'upgrade_skill' and int(msg[0]) in range(6):
         info_send = dict(action='upgrade_skill', time=0, skill_type=skill_types[int(msg[0])], ai_id=ai_id, id=int(msg[1]))
-        info_send['id'] = int(msg[1]) if int(msg[1]) != -1 else ai_id + 1 # For Debug
+        info_send['id'] = int(msg[1]) if int(msg[1]) != -1 else ai_id + 1  # For Debug
         msg_send = json.dumps(info_send)
         enqueue_func(msg_send)
 

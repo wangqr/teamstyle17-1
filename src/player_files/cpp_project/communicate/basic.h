@@ -63,8 +63,8 @@ const int kSkillCost[kSkillTypes] = { 10, 50, 0, 0, 0, 0 };  // 技能使用开�
 const int kBasicSkillPrice[kSkillTypes] = { 1, 1, 2, 2, 2, 1 };
 
 struct Object {
-	int team_id;
 	int id;
+	int ai_id;
 	ObjectType type;
 	Position pos;
 	double radius;
@@ -81,8 +81,12 @@ struct PlayerObject {
 	int health;
 	int max_health;
 	int vision;
+	double r;
+	Position pos;
+	Position speed;
 	int ability; // 技能点
 	int skill_level[kSkillTypes];
+	int skill_cd[kSkillTypes];
 };
 
 struct PlayerStatus {

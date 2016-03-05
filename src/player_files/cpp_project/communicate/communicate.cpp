@@ -18,7 +18,7 @@ void LoadMapInfo(char *info_str) {
 	while (info_str[ed] != 0) {
 		if (info_str[ed] == ';') {  // 不同 Object 的数据以 ';' 分隔
 			info_str[ed] = 0;
-			sscanf(info_str + st, "%d%d%lf%lf%lf%lf", &MAP_.objects[object_counter].id, &MAP_.objects[object_counter].type,
+			sscanf(info_str + st, "%d%d%d%lf%lf%lf%lf", &MAP_.objects[object_counter].id, &MAP_.objects[object_counter].ai_id, &MAP_.objects[object_counter].type,
 				&MAP_.objects[object_counter].pos.x, &MAP_.objects[object_counter].pos.y, &MAP_.objects[object_counter].pos.z,
 				&MAP_.objects[object_counter].radius);
 			++object_counter;
@@ -38,9 +38,13 @@ void LoadPlayerStatus(char *status_str) {
 	while (status_str[ed] != 0) {
 		if (status_str[ed] == ';') {  // 不同 Object 的数据以 ';' 分隔
 			status_str[ed] = 0;
-			sscanf(status_str + st, "%d%d%d%d%d%d%d%d%d%d%d", &STATUS_.objects[object_counter].id, &STATUS_.objects[object_counter].health, &STATUS_.objects[object_counter].max_health, &STATUS_.objects[object_counter].vision, &STATUS_.objects[object_counter].ability,
+			sscanf(status_str + st, "%d%d%d%d%d%lf%lf%lf%lf%lf%lf%lf%d%d%d%d%d%d%d%d%d%d%d%d", &STATUS_.objects[object_counter].id, &STATUS_.objects[object_counter].health, &STATUS_.objects[object_counter].max_health, &STATUS_.objects[object_counter].vision, &STATUS_.objects[object_counter].ability,
+				&STATUS_.objects[object_counter].r, &STATUS_.objects[object_counter].pos.x, &STATUS_.objects[object_counter].pos.y, &STATUS_.objects[object_counter].pos.z,
+				&STATUS_.objects[object_counter].speed.x, &STATUS_.objects[object_counter].speed.y, &STATUS_.objects[object_counter].speed.z,
 				&STATUS_.objects[object_counter].skill_level[0], &STATUS_.objects[object_counter].skill_level[1], &STATUS_.objects[object_counter].skill_level[2],
-				&STATUS_.objects[object_counter].skill_level[3], &STATUS_.objects[object_counter].skill_level[4], &STATUS_.objects[object_counter].skill_level[5]);
+				&STATUS_.objects[object_counter].skill_level[3], &STATUS_.objects[object_counter].skill_level[4], &STATUS_.objects[object_counter].skill_level[5],
+				&STATUS_.objects[object_counter].skill_cd[0], &STATUS_.objects[object_counter].skill_cd[1], &STATUS_.objects[object_counter].skill_cd[2],
+				&STATUS_.objects[object_counter].skill_cd[3], &STATUS_.objects[object_counter].skill_cd[4], &STATUS_.objects[object_counter].skill_cd[5]);
 			++object_counter;
 			st = ed + 1;
 		} else if (status_str[ed] == '|') {
