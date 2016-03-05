@@ -127,7 +127,6 @@ class AICore(object):
         return dll_main
 
     def start_ai(self, enqueue_func):
-
         def communicate(dll_message):
             # Also pass to dll_main
             assert isinstance(dll_message, bytes)
@@ -152,7 +151,7 @@ class AIThread(object):
         self.ai_thread = None
 
     def create_thread(self, enqueue_func):
-        self.ai_thread = Thread(target=self.core.start_ai, args=(enqueue_func), name='ai%d' % self.core.id, daemon=True)
+        self.ai_thread = Thread(target=self.core.start_ai, args=(enqueue_func,), name='ai%d' % self.core.id, daemon=True)
 
     def start(self):
         # Start AI thread
