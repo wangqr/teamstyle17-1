@@ -105,17 +105,21 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
         ret_str_list.append('%d|' % info['time'])
         for player in info['players']:
             skill_levels = [-1] * 6  # 默认 -1 表示不改变
+            skill_cds = [-1] * 6  # 同上
             for skill in player['skills']:
                 index = skill_types.index(skill['name'])
                 skill_levels[index] = skill['level']
-                s = '%d %d %d %d %d %.10f %.10f %.10f %d %d %d %d %d %d;' % (
-                    info['id'], info['ai_id'], info['health'], info['vision'], info['ability'], info['speed'][0], info['speed'][1], info['speed'][2],
-                    skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5])
+                skill_cds[index] = skill['cd']
+            s = '%d %d %d %d %d %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d;' % (
+                info['id'], info['ai_id'], info['health'], info['vision'], info['ability'], info['speed'][0], info['speed'][1], info['speed'][2],
+                skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5],
+                skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5])
             ret_str_list.append(s)
         ret_str = ' '.join(ret_str_list) + '#\n'
 
     elif action_name == 'query_map':
         ret_str_list.append('m')
+        info = json.loads(msg)
         ret_str_list.append('%d|' % info['time'])
         for obj in info['objects']:
             s = '%d %d %.30f %.30f %.30f %.30f;' % (
@@ -143,10 +147,12 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
                 for skill in info['skills']:
                     index = skill_types.index(skill['name'])
                     skill_levels[index] = skill['level']
-                s = '%d %d %d %d %d %d %d %.10f %.10f %.10f %d %d %d %d %d %d;' % (
+                    skill_cds[index] = skill['cd']
+                s = '%d %d %d %d %d %d %d %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d;' % (
                     info_types.index(info['info']), info['time'], info['id'], info['ai_id'], info['health'], info['vision'], info['ability'],
                     info['speed'][0], info['speed'][1], info['speed'][2],
-                    skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5])
+                    skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5],
+                    skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5])
                 ret_str_list.append(s)
 
             elif info['info'] == 'skill_cast':
