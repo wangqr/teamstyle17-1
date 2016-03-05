@@ -171,7 +171,8 @@ class Game:
     MAX_DELAY_ROUNDS = 1
     ROUNDS_PER_SEC = 100
 
-    def __init__(self, rep_file_name, time_limit=0., seed=None, start_paused=False, player_num=2, verbose=False):
+    def __init__(self, rep_file_name: str, verbose: bool, time_limit: float, seed: int, start_paused=False,
+                 player_num=2):
         if seed is None:
             seed = random.randrange(0, 4294967296)
         self._seed = seed
@@ -231,8 +232,13 @@ class Game:
                 self._logger.debug('<<<<<<<< fin')
                 continue
             elif next_action[2].action_name == '_end':
-                self._logger.info('stop signal received')
+                self._logger.info('terminate signal received')
                 self._logger.debug('<<<<<<<< fin')
+                break
+            elif next_action[2].action_name == 'game_end':
+                self._logger.debug('<<<<<<<< fin')
+                self._logger.info('[GAME END] WINNER = %d', json.loads(next_action[2].action_json)['ai_id'])
+                self._run_logger.sig.put(next_action[2].action_json)
                 break
             if self.__logic_time(next_action[0]) > self._last_action_timestamp:
                 if not self._sync and self.__logic_time(
@@ -273,7 +279,8 @@ class Game:
 
     def __info_callback(self, obj: str):
         if obj.find('"end"') >= 0:
-            self.enqueue(0, action.Action('{"action":"_platform"}', "_end", None))
+            j = json.loads(obj)
+            self.enqueue(0, action.Action('{"action":"game_end", "ai_id":%d}' % j['ai_id'], 'game_end', None))
         self._info_callback(obj)
 
 
@@ -305,15 +312,20 @@ def push_queue_ai_proxy(obj: str, game_obj: Game):
 
 
 def main():
-    #  uncomment the following line before release
-    # sys.excepthook = lambda _1, _2, _3: None
-
+    global root_logger
     args = docopt.docopt(__doc__,
                          version='ts17-platform ' + __version__ + ' [ts17-core ver ' + ts17core.__version__ + ']')
+    root_logger.basic_config(level=(Logging.DEBUG if args['-V'] else Logging.INFO))
     if args['run']:
         run_main(args)
+        root_logger.info('quit.')
+        time.sleep(0.3)
+        os.kill(os.getpid(), signal.SIGTERM)
     elif args['replay']:
         replay_main(args)
+        root_logger.info('quit.')
+        time.sleep(0.3)
+        os.kill(os.getpid(), signal.SIGTERM)
     else:
         docopt.docopt(__doc__, argv=['-h'])
 
@@ -327,7 +339,6 @@ def info_call_back(ui_obj, obj: str):
 def run_main(args: dict):
     global root_logger
 
-    root_logger.basic_config(level=(Logging.DEBUG if args['-V'] else Logging.INFO))
     rep_file_name = args['-r'] or ('ts17_' + time.strftime('%m%d%H%M%S') + '.rpy')
 
     if not rep_file_name.endswith('.rpy'):
@@ -363,36 +374,23 @@ def run_main(args: dict):
 def replay_main(args: dict):
     global root_logger
 
-    root_logger.basic_config(level=(Logging.DEBUG if args['-V'] else Logging.INFO))
     rep_file_name = args['<repfile>']
 
     if not rep_file_name.endswith('.rpy'):
         rep_file_name += '.rpy'
 
-    game_obj = logger.RepGame(verbose=args['-V'])
-    with gzip.open(rep_file_name, 'rt', encoding='utf-8') as rep_file:
-        for line in rep_file:
-            j = json.loads(line)
-            t = j.get('time')
-            if t is None:
-                t = 0
-            game_obj.queue.put((t, action.Action(line, 'instruction', None)))
+    rep_mgr = logger.RepManager(rep_file_name=rep_file_name, verbose=args['-V'])
 
     game_ui_obj = None
     if args['-u']:
-        game_ui_obj = uiobj.UIObject(game_obj, ai_id=-1, port=int(args['-u']))
-        game_obj._info_callback = lambda x: info_call_back(game_ui_obj, x)
+        game_ui_obj = uiobj.UIObject(rep_mgr, ai_id=-1, port=int(args['-u']))
+        rep_mgr._info_callback = lambda x: info_call_back(game_ui_obj, x)
         game_ui_obj.start()
 
-    game_obj.mainloop()
+    rep_mgr.mainloop()
 
     if game_ui_obj and game_ui_obj.is_alive():
         game_ui_obj.exit()
-
-    root_logger.info('quit.')
-
-    time.sleep(0.3)
-    os.kill(os.getpid(), signal.SIGTERM)
 
 if __name__ == '__main__':
     main()
