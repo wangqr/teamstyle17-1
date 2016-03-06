@@ -5,14 +5,14 @@
 
 #define INF_ 2147483647
 
-const int kMapSize = 10000;
+const int kMapSize = 40000;
 const int kMaxObjectNumber = 10000;
 const int kMaxPlayerObjectNumber = 10;
 
 const double kDeathRatio = 1 / 4;  // 当前生命值与历史最大生命值之比小于此值即告死亡
 const double kEdibleRatio = 5 / 6;  // 目标单位半径与自己单位半径的比值小于此值时可以食用
 const double kSpikeDamage = 1 / 3;
-const int kMoveSpeed = 0;
+const int kMaxMoveSpeed = 0;
 const int kFoodHealth = 10;
 
 
@@ -38,7 +38,7 @@ enum SkillType {
 	SHIELD,
 	TELEPORT,
 
-	VISION_UP,
+	VISION_UP,  // 被动技能
 	HEALTH_UP,  // 非技能
 
 	kSkillTypes
@@ -64,12 +64,12 @@ const int kBasicSkillPrice[kSkillTypes] = { 1, 1, 2, 2, 2, 1 };
 
 struct Object {
 	int id;
-	int ai_id;
+	int ai_id;  // -2 表示中立单位，0 ~ n-1 是选手
 	ObjectType type;
 	Position pos;
 	double radius;
-	int shield_time;
-	int long_attack_casting;
+	int shield_time;  // 0 表示无护盾
+	int long_attack_casting;  // -1 表示未使用此技能， 大于等于 0 表示距离此技能命中自己的时间
 };
 
 struct MapInfo {
@@ -83,12 +83,12 @@ struct PlayerObject {
 	int health;
 	int max_health;
 	int vision;
-	double r;
+	double radius;
 	Position pos;
 	Position speed;
 	int ability; // 技能点
 	int skill_level[kSkillTypes];
-	int skill_cd[kSkillTypes];
+	int skill_cd[kSkillTypes];  // -1 表示此技能不能使用
 };
 
 struct PlayerStatus {

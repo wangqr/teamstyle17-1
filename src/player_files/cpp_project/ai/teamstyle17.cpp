@@ -13,29 +13,24 @@ Position Displacement(Position src, Position des) {
 	return d;
 }
 
-int UpgradeSkillPrice(SkillType skill, const PlayerObject *status) {
-	int ret = 0;
-	if (skill == HEALTH_UP) {
-		int level = status->skill_level[HEALTH_UP];
-		ret = kBasicSkillPrice[HEALTH_UP];
-		while (level > 0) {
-			ret *= 2;
-			--level;
-		}
-	} else {
-		int sum_level = 0;
-		for (int i = 0; i != kSkillTypes; ++i) {
-			if (i == HEALTH_UP) {
-				continue;
-			}
-			sum_level += status->skill_level[i];
-		}
-
-		ret = kBasicSkillPrice[skill];
-		while (sum_level > 0) {
-			ret *= 2;
-			--sum_level;
-		}
-	}
-	return ret;
+double Norm(Position v) {
+	return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
+
+
+Position Scale(Position v, double n) {
+	Position t = { v.x * n, v.y * n, v.z * n };
+	return t;
+}
+
+double PointLineDistance(Position point, Position line_point_1, Position line_point_2) {
+	double a, b, c, p, S;  // 三边长,半周长, 面积
+	a = Norm(Displacement(point, line_point_1));
+	b = Norm(Displacement(point, line_point_2));
+	c = Norm(Displacement(line_point_1, line_point_2));
+	if (c == 0) return double(0);
+	p = (a + b + c) / 2;
+	S = sqrt(p * (p - a) * (p - b) * (p - c));
+	return 2 * S / c;
+}
+

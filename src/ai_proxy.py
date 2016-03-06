@@ -6,10 +6,9 @@
 import ctypes
 import json
 import sys
-import queue
 from threading import Thread
 
-max_message_length = 10000
+max_message_length = 1000000
 
 
 def set_string_value(buffer, string):
@@ -33,8 +32,8 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
             for player in info['players']:
                 if player['ai_id'] != ai_id:
                     continue
-                skill_levels = [-1] * 6  # 默认 -1 表示不改变
-                skill_cds = [-1] * 6  # 同上
+                skill_levels = [0] * 6
+                skill_cds = [-1] * 6
                 for skill in player['skills']:
                     index = skill_types.index(skill['name'])
                     skill_levels[index] = skill['level']

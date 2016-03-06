@@ -25,6 +25,9 @@ void CONTINUE();
 
 // 其他
 double Distance(Position pos1, Position pos2);
-Position Displacement(Position src, Position des);  // 从 src 到 des 的位移矢量 (矢量差)
+Position Displacement( Position src,  Position des);  // 从 src 到 des 的位移矢量 (矢量差)
+double Norm( Position v);  // 矢量模长
+Position Scale( Position v,  double n);  // 矢量缩放 n 倍
+double PointLineDistance( Position point,  Position line_point_1,  Position line_point_2);  // 计算点线距离
 
 #endif
