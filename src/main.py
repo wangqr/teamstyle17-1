@@ -237,7 +237,8 @@ class Game:
                 break
             elif next_action[2].action_name == 'game_end':
                 self._logger.debug('<<<<<<<< fin')
-                self._logger.info('[GAME END] WINNER = %d', json.loads(next_action[2].action_json)['ai_id'])
+                self._logger.info('****GAME END****')
+                self._logger.info('WINNER = %d', json.loads(next_action[2].action_json)['ai_id'])
                 self._run_logger.sig.put(next_action[2].action_json)
                 break
             if self.__logic_time(next_action[0]) > self._last_action_timestamp:
@@ -280,7 +281,11 @@ class Game:
     def __info_callback(self, obj: str):
         if obj.find('"end"') >= 0:
             j = json.loads(obj)
-            self.enqueue(0, action.Action('{"action":"game_end", "ai_id":%d}' % j['ai_id'], 'game_end', None))
+            winner_id = -2
+            for js in j:
+                if js['info']=='end':
+                    winner_id = js['ai_id']
+            self.enqueue(0, action.Action('{"action":"game_end", "ai_id":%d}' % winner_id, 'game_end', None))
         self._info_callback(obj)
 
 
