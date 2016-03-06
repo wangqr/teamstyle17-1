@@ -105,7 +105,7 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
         ret_str_list.append('%d|' % info['time'])
         for player in info['players']:
             skill_levels = [0] * 6
-            skill_cds = [-1] * 6  # 同上
+            skill_cds = [-1] * 6
             for skill in player['skills']:
                 index = skill_types.index(skill['name'])
                 skill_levels[index] = skill['level']
@@ -123,9 +123,9 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
         info = json.loads(msg)
         ret_str_list.append('%d|' % info['time'])
         for obj in info['objects']:
-            s = '%d %d %d %.10f %.10f %.10f %.10f %d %d;' % (
+            s = '%d %d %d %.10f %.10f %.10f %.10f;' % (
                 int(obj['id']), int(obj['ai_id']), int(object_types.index(obj['type'])),
-                obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'], obj['longattackcasting'], obj['shieldtime'])
+                obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'])
             ret_str_list.append(s)
         ret_str = ' '.join(ret_str_list) + '#\n'
 
@@ -134,9 +134,9 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
         info_list = json.loads(msg)
         for info in info_list:
             if info['info'] == 'object':
-                s = '%d %d %d %d %d %.10f %.10f %.10f %.10f %d %d;' % (
+                s = '%d %d %d %d %d %.10f %.10f %.10f %.10f;' % (
                     info_types.index(info['info']), info['time'], info['id'], info['ai_id'], object_types.index(info['type']),
-                    info['pos'][0], info['pos'][1], info['pos'][2], info['r'], info['longattackcasting'], info['shieldtime'])
+                    info['pos'][0], info['pos'][1], info['pos'][2], info['r'])
                 ret_str_list.append(s)
 
             elif info['info'] == 'delete':
@@ -146,6 +146,7 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
 
             elif info['info'] == 'player':
                 skill_levels = [-1] * 6  # 默认 -1 表示不改变
+                skill_cds = [-1] * 6  # 同上
                 for skill in info['skills']:
                     index = skill_types.index(skill['name'])
                     skill_levels[index] = skill['level']
