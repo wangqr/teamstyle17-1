@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import copy
 import gzip
 import json
 import queue
@@ -58,15 +57,17 @@ class RepGame:
 
     def mainloop(self):
         while 1:
-            next_action = self._action_buffer
-            if next_action is None and self.queue.empty():
+            next_action = None
+            if self._action_buffer is None and self.queue.empty():
+                self._timer.stop()
+                self._timer.elapsed = self.__real_time(self._last_action_timestamp)
                 return
             t = 0
             if self._action_buffer is not None:
                 t = self.__timeout_before_round(min(self._action_buffer[0], self._last_action_timestamp + 1))
-            if self._paused or not self.sig.empty() or t > 0:
+            if not self._timer.running or not self.sig.empty() or t > 0:
                 try:
-                    q = self.sig.get(block=True, timeout=(None if self._paused else t))
+                    q = self.sig.get(block=True, timeout=(t if self._timer.running else None))
                 except queue.Empty:
                     q = None
                 if q == 0:
@@ -74,7 +75,6 @@ class RepGame:
                     return
                 elif q == 1:
                     self._timer.running = not self._timer.running
-                    self._paused = not self._paused
                     continue
                 elif type(q) == action.Action:
                     """
@@ -151,7 +151,11 @@ class RepGame:
 
 class RepManager:
     def __init__(self, rep_file_name: str, verbose: bool):
-        self._queue = queue.Queue()
+        self._rep_file = rep_file_name
+        self._games = sortedcontainers.SortedDict()
+        self.__info_callback = lambda x: None
+        self._verbose = verbose
+        self._active_game = RepGame(verbose=verbose, info_callback=self._info_callback)
         with gzip.open(rep_file_name, 'rt', encoding='utf-8') as rep_file:
             for line in rep_file:
                 j = json.loads(line)
@@ -160,14 +164,9 @@ class RepManager:
                     t = 0
                 k = j.get('action')
                 if k != 'game_end':
-                    self._queue.put((t, action.Action(line, 'instruction', None)))
+                    self._active_game.queue.put((t, action.Action(line, 'instruction', None)))
                 else:
-                    self._queue.put((t, action.Action(line, 'game_end', None)))
-        self._games = sortedcontainers.SortedDict()
-        self.__info_callback = lambda x: None
-        self._verbose = verbose
-        self._active_game = RepGame(verbose=verbose, info_callback=self._info_callback)
-        self._active_game.queue = copy.deepcopy(self._queue)
+                    self._active_game.queue.put((t, action.Action(line, 'game_end', None)))
         self._rep_thread = None
         self.sig = queue.Queue()
 
@@ -178,7 +177,11 @@ class RepManager:
             self.sig.put(False)
             self._active_game.sig.put(0)
         else:
-            self._active_game.enqueue(timestamp, act)
+            if self._active_game._action_buffer is None and self._active_game.queue.empty():
+                self._active_game.enqueue(timestamp, act)
+                self.sig.put(True)
+            else:
+                self._active_game.enqueue(timestamp, act)
 
     def _info_callback(self, obj: str):
         self.__info_callback(obj)
@@ -186,6 +189,10 @@ class RepManager:
     def mainloop(self):
         q = True
         while q:
+
+            # 实际上开始指令应该是由界面来发送
+            self._active_game._timer.start()
+
             self._active_game.mainloop()
             q = self.sig.get()
 
@@ -199,13 +206,23 @@ class RepManager:
             self._active_game.sig.put(r)
             r.get()
             ts = self._active_game._last_action_timestamp
-            if not ts in self._games:
+            if ts not in self._games:
                 self._games[ts] = self._active_game
                 self._active_game.set_round(ts)
             pos = self._games.bisect(timestamp)
             if pos == 0:
                 self._active_game = RepGame(verbose=self._verbose, info_callback=self._info_callback)
-                self._active_game.queue = copy.deepcopy(self._queue)
+                with gzip.open(self._rep_file, 'rt', encoding='utf-8') as rep_file:
+                    for line in rep_file:
+                        j = json.loads(line)
+                        t = j.get('time')
+                        if t is None:
+                            t = 0
+                        k = j.get('action')
+                        if k != 'game_end':
+                            self._active_game.queue.put((t, action.Action(line, 'instruction', None)))
+                        else:
+                            self._active_game.queue.put((t, action.Action(line, 'game_end', None)))
                 if timestamp:
                     self._active_game.set_round(timestamp)
             else:
