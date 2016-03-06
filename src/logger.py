@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import copy
 import gzip
 import json
 import queue
@@ -151,7 +150,11 @@ class RepGame:
 
 class RepManager:
     def __init__(self, rep_file_name: str, verbose: bool):
-        self._queue = queue.Queue()
+        self._rep_file = rep_file_name
+        self._games = sortedcontainers.SortedDict()
+        self.__info_callback = lambda x: None
+        self._verbose = verbose
+        self._active_game = RepGame(verbose=verbose, info_callback=self._info_callback)
         with gzip.open(rep_file_name, 'rt', encoding='utf-8') as rep_file:
             for line in rep_file:
                 j = json.loads(line)
@@ -160,14 +163,9 @@ class RepManager:
                     t = 0
                 k = j.get('action')
                 if k != 'game_end':
-                    self._queue.put((t, action.Action(line, 'instruction', None)))
+                    self._active_game.queue.put((t, action.Action(line, 'instruction', None)))
                 else:
-                    self._queue.put((t, action.Action(line, 'game_end', None)))
-        self._games = sortedcontainers.SortedDict()
-        self.__info_callback = lambda x: None
-        self._verbose = verbose
-        self._active_game = RepGame(verbose=verbose, info_callback=self._info_callback)
-        self._active_game.queue = copy.deepcopy(self._queue)
+                    self._active_game.queue.put((t, action.Action(line, 'game_end', None)))
         self._rep_thread = None
         self.sig = queue.Queue()
 
@@ -205,7 +203,17 @@ class RepManager:
             pos = self._games.bisect(timestamp)
             if pos == 0:
                 self._active_game = RepGame(verbose=self._verbose, info_callback=self._info_callback)
-                self._active_game.queue = copy.deepcopy(self._queue)
+                with gzip.open(self._rep_file, 'rt', encoding='utf-8') as rep_file:
+                    for line in rep_file:
+                        j = json.loads(line)
+                        t = j.get('time')
+                        if t is None:
+                            t = 0
+                        k = j.get('action')
+                        if k != 'game_end':
+                            self._active_game.queue.put((t, action.Action(line, 'instruction', None)))
+                        else:
+                            self._active_game.queue.put((t, action.Action(line, 'game_end', None)))
                 if timestamp:
                     self._active_game.set_round(timestamp)
             else:
