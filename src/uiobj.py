@@ -116,7 +116,7 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
                 skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5],
                 skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5])
             ret_str_list.append(s)
-        ret_str = ' '.join(ret_str_list) + '#\n'
+        ret_str = '\ns'.join(ret_str_list) + '#\n'
 
     elif action_name == 'query_map':
         ret_str_list.append('m')
@@ -127,7 +127,7 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
                 int(obj['id']), int(obj['ai_id']), int(object_types.index(obj['type'])),
                 obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'])
             ret_str_list.append(s)
-        ret_str = ' '.join(ret_str_list) + '#\n'
+        ret_str = '\nm'.join(ret_str_list) + '#\n'
 
     elif action_name == 'info_add':
         ret_str_list.append('a')
@@ -174,7 +174,7 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
                     info_types.index(info['info']), info['time'], info['ai_id'])
                 ret_str_list.append(s)
 
-            ret_str = ' '.join(ret_str_list) + '#\n'
+            ret_str = '\na'.join(ret_str_list) + '#\n'
 
     return ret_str
 
