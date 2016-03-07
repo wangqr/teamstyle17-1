@@ -23,9 +23,13 @@ void LoadMapInfo(char *info_str) {
 	while (info_str[ed] != 0) {
 		if (info_str[ed] == ';') {  // 不同 Object 的数据以 ';' 分隔
 			info_str[ed] = 0;
-			sscanf(info_str + st, "%d%d%d%lf%lf%lf%lf%d%d", &MAP_.objects[object_counter].id, &MAP_.objects[object_counter].ai_id, &MAP_.objects[object_counter].type,
-				&MAP_.objects[object_counter].pos.x, &MAP_.objects[object_counter].pos.y, &MAP_.objects[object_counter].pos.z,
-				&MAP_.objects[object_counter].radius, &MAP_.objects[object_counter].long_attack_casting, &MAP_.objects[object_counter].shield_time);
+			Object *obj = &MAP_.objects[object_counter];
+			sscanf(info_str + st, "%d%d%d%lf%lf%lf%lf%d%d", &obj->id, &obj->ai_id, &obj->type,
+				&obj->pos.x, &obj->pos.y, &obj->pos.z,
+				&obj->radius, &obj->long_attack_casting, &obj->shield_time);
+			if (obj->type == PLAYER && obj->ai_id == -2) {
+				obj->type = BOSS;  // 判断一个物体是 BOSS
+			}
 			++object_counter;
 			st = ed + 1;
 		} else if(info_str[ed] == '|') {
@@ -44,14 +48,15 @@ void LoadPlayerStatus(char *status_str) {
 	while (status_str[ed] != 0) {
 		if (status_str[ed] == ';') {  // 不同 Object 的数据以 ';' 分隔
 			status_str[ed] = 0;
-			sscanf(status_str + st, "%d%d%d%d%d%lf%lf%lf%lf%lf%lf%lf%d%d%d%d%d%d%d%d%d%d%d%d", &STATUS_.objects[object_counter].id, &STATUS_.objects[object_counter].health, 
-				&STATUS_.objects[object_counter].max_health, &STATUS_.objects[object_counter].vision, &STATUS_.objects[object_counter].ability,
-				&STATUS_.objects[object_counter].radius, &STATUS_.objects[object_counter].pos.x, &STATUS_.objects[object_counter].pos.y, &STATUS_.objects[object_counter].pos.z,
-				&STATUS_.objects[object_counter].speed.x, &STATUS_.objects[object_counter].speed.y, &STATUS_.objects[object_counter].speed.z,
-				&STATUS_.objects[object_counter].skill_level[0], &STATUS_.objects[object_counter].skill_level[1], &STATUS_.objects[object_counter].skill_level[2],
-				&STATUS_.objects[object_counter].skill_level[3], &STATUS_.objects[object_counter].skill_level[4], &STATUS_.objects[object_counter].skill_level[5],
-				&STATUS_.objects[object_counter].skill_cd[0], &STATUS_.objects[object_counter].skill_cd[1], &STATUS_.objects[object_counter].skill_cd[2],
-				&STATUS_.objects[object_counter].skill_cd[3], &STATUS_.objects[object_counter].skill_cd[4], &STATUS_.objects[object_counter].skill_cd[5]);
+			PlayerObject *player = &STATUS_.objects[object_counter];
+			sscanf(status_str + st, "%d%d%d%d%d%lf%lf%lf%lf%lf%lf%lf%d%d%d%d%d%d%d%d%d%d%d%d", &player->id, &player->health, 
+				&player->max_health, &player->vision, &player->ability,
+				&player->radius, &player->pos.x, &player->pos.y, &player->pos.z,
+				&player->speed.x, &player->speed.y, &player->speed.z,
+				&player->skill_level[0], &player->skill_level[1], &player->skill_level[2],
+				&player->skill_level[3], &player->skill_level[4], &player->skill_level[5],
+				&player->skill_cd[0], &player->skill_cd[1], &player->skill_cd[2],
+				&player->skill_cd[3], &player->skill_cd[4], &player->skill_cd[5]);
 			++object_counter;
 			st = ed + 1;
 		} else if (status_str[ed] == '|') {

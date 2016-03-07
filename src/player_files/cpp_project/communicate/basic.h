@@ -7,14 +7,13 @@
 
 const int kMapSize = 40000;
 const int kMaxObjectNumber = 10000;
-const int kMaxPlayerObjectNumber = 10;
+const int kMaxPlayerObjectNumber = 10;  // 实际上应该不会有那么多
 
 const double kDeathRatio = 1 / 4;  // 当前生命值与历史最大生命值之比小于此值即告死亡
 const double kEatableRatio = 5 / 6;  // 目标单位半径与自己单位半径的比值小于此值时可以食用
 const double kSpikeDamage = 1 / 3;
 const int kMaxMoveSpeed = 0;
 const int kFoodHealth = 10;
-const int kNutrientSourceRenewTime = 100;
 
 struct Position {
 	double x;
@@ -29,8 +28,7 @@ enum ObjectType {
 	FOOD,
 	NUTRIENT,
 	SPIKE,
-	TARGET,
-	BULLET,
+	BOSS,
 	kObjectTypes
 };
 
@@ -50,6 +48,8 @@ const int kMaxSkillLevel = 5;
 
 // 技能参数 TODO
 const int kLongAttackDamage[kMaxSkillLevel + 1] = { 0, 100, 200, 300, 400, 500 };
+const int kLongAttackRange[kMaxSkillLevel + 1] = { 0, 100, 200, 300, 400, 500 };
+const int kLongAttackCastingTime = 10;  // 蓄力时间
 const int kShortAttackDamage[kMaxSkillLevel + 1] = { 0, 1000, 1200, 1400, 1600, 1800 };
 const int kShortAttackRange[kMaxSkillLevel + 1] = { 0, 100, 110, 120, 130, 140 };
 const int kShieldTime[kMaxSkillLevel + 1] = { 0, 100, 120, 140, 160, 180 };

@@ -28,6 +28,8 @@ double Distance(Position pos1, Position pos2);
 Position Displacement(Position src, Position des);  // 从 src 到 des 的位移矢量 (矢量差)
 double Norm(Position vec);  // 矢量模长
 Position Scale(double n, Position vec);  // 矢量缩放 n 倍 (矢量数乘)
+double DotProduct(Position vec1, Position vec2);  // 矢量点乘
+Position CrossProduct(Position vec1, Position vec2);  // 叉乘
 double PointLineDistance(Position point, Position line_point_1, Position line_point_2);  // 计算空间点线距离
 
 #endif

@@ -17,10 +17,21 @@ double Norm(Position v) {
 	return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
-
 Position Scale(double n, Position v) {
 	Position t = { v.x * n, v.y * n, v.z * n };
 	return t;
+}
+
+double DotProduct(Position vec1, Position vec2) {
+	return vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z;
+}
+
+Position CrossProduct(Position u, Position v) {  // 真的会有人用这种东西吗..
+	Position ret;
+	ret.x = u.y * v.z - u.z * v.y;
+	ret.y = u.z * v.x - u.x * v.z;
+	ret.z = u.x * v.y - u.y * v.x;
+	return ret;
 }
 
 double PointLineDistance(Position point, Position line_point_1, Position line_point_2) {
