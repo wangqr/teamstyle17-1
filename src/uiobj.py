@@ -235,9 +235,9 @@ class UIObject(threading.Thread):
                 self.ui_socket, address = self.socket.accept()
                 main.root_logger.info('platform (UI) Connection accepted from %s', repr(address))
                 self.sig = queue.Queue()
-                self.recv_thread = RecvThread(self.ui_socket, self.sig, self.push_queue_ui)
-                self.recv_thread.start()
                 self.send_thread = SendThread(self.ui_socket, self.sig)
                 self.send_thread.start()
+                self.recv_thread = RecvThread(self.ui_socket, self.sig, self.push_queue_ui)
+                self.recv_thread.start()
             except OSError:
                 break
