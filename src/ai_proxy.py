@@ -49,7 +49,7 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
         elif action_name == 'query_map':
             ret_str_list.append('%d|' % info['time'])
             for obj in info['objects']:
-                s = '%d %d %d %.30f %.30f %.30f %.30f %d %d;' % (
+                s = '%d %d %d %.10f %.10f %.10f %.10f %d %d;' % (
                     int(obj['id']), int(obj['ai_id']), int(object_types.index(obj['type'])),
                     obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'], obj['longattackcasting'], obj['shieldtime'])
                 ret_str_list.append(s)

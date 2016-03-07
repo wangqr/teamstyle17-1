@@ -18,7 +18,7 @@ double Norm(Position v) {
 }
 
 
-Position Scale(Position v, double n) {
+Position Scale(double n, Position v) {
 	Position t = { v.x * n, v.y * n, v.z * n };
 	return t;
 }

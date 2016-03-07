@@ -78,8 +78,8 @@ const MapInfo *GetMap() {
 	return &MAP_;
 }
 
-const PlayerStatus *GetStatus(int user_id) {
-	sprintf(msg_send, "query_status %d", user_id);
+const PlayerStatus *GetStatus() {
+	sprintf(msg_send, "query_status %d", -1);
 	strcpy(msg_receive, Communicate(msg_send));
 	LoadPlayerStatus(msg_receive);
 	return &STATUS_;
@@ -93,8 +93,8 @@ int GetTime() {
 	return current_time;
 }
 
-void Move(int user_id, Position des) {
-	sprintf(msg_send, "move %d %.10f %.10f %.10f", user_id, des.x, des.y, des.z);
+void Move(int user_id, Speed speed) {
+	sprintf(msg_send, "move %d %.10f %.10f %.10f", user_id, speed.x, speed.y, speed.z);
 	Communicate(msg_send);
 }
 
