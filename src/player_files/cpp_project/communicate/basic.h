@@ -72,7 +72,7 @@ struct Object {  // 视野内物体的公开可见属性
 	int long_attack_casting;  // 距离此单位发动的 Long Attack 蓄力时间结束剩余的时间，-1 表示未发动此技能
 };
 
-struct MapInfo {
+struct Map {
 	int time;  // 当前的回合数，也可用 GetTime 查询
 	Object objects[kMaxObjectNumber];  // 视野内的所有物体
 	int objects_number;
@@ -94,7 +94,7 @@ struct PlayerObject {  // 己方单位的可见属性
 	int skill_cd[kSkillTypes];  // -1 表示此技能不能使用，0 表示可用
 };
 
-struct PlayerStatus {
+struct Status {
 	int team_id;  // 自己的队伍编号
 	PlayerObject objects[kMaxPlayerObjectNumber];  // 自己所有单位的列表
 	int objects_number;

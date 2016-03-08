@@ -10,8 +10,8 @@
 
 const int kMaxMessageLength = 1000000;
 
-MapInfo MAP_;
-PlayerStatus STATUS_;
+Map MAP_;
+Status STATUS_;
 
 char msg_send[kMaxMessageLength];
 char msg_receive[kMaxMessageLength];
@@ -77,14 +77,14 @@ void UseSkill(SkillType skill, int user_id, int target_id, Position des) { // �
 
 // 以下是选手用
 
-const MapInfo *GetMap() {
+const Map *GetMap() {
 	sprintf(msg_send, "query_map");
 	strcpy(msg_receive, Communicate(msg_send));
 	LoadMapInfo(msg_receive);
 	return &MAP_;
 }
 
-const PlayerStatus *GetStatus() {
+const Status *GetStatus() {
 	sprintf(msg_send, "query_status %d", -1);
 	strcpy(msg_receive, Communicate(msg_send));
 	LoadPlayerStatus(msg_receive);

@@ -7,8 +7,8 @@
 
 // 查询指令
 int GetTime();  // 查询当前游戏时间
-const MapInfo *GetMap();  // 获取视野内的单位信息
-const PlayerStatus *GetStatus();  // 获取己方单位的状态
+const Map *GetMap();  // 获取视野内的单位信息
+const Status *GetStatus();  // 获取己方单位的状态
 
 // 行动指令
 void Move(int user_id, Speed speed);  // 移动，参数是速度矢量
