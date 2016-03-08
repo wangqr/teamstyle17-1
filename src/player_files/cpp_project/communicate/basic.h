@@ -12,7 +12,7 @@ const int kMaxPlayerObjectNumber = 10;  // 实际上应该不会有那么多
 const double kDeathRatio = 1 / 4;  // 当前生命值与历史最大生命值之比小于此值即告死亡
 const double kEatableRatio = 5 / 6;  // 目标单位半径与自己单位半径的比值小于此值时可以食用
 const double kSpikeDamage = 1 / 3;
-const int kMaxMoveSpeed = 0;
+const int kMaxMoveSpeed = 100;  // 未使用 Dash 时的最大速度
 const int kFoodHealth = 10;
 
 struct Position {
@@ -48,14 +48,14 @@ const int kMaxSkillLevel = 5;
 
 // 技能参数 TODO
 const int kLongAttackDamage[kMaxSkillLevel + 1] = { 0, 100, 200, 300, 400, 500 };
-const int kLongAttackRange[kMaxSkillLevel + 1] = { 0, 100, 200, 300, 400, 500 };
+const int kLongAttackRange[kMaxSkillLevel + 1] = { 0, 3500, 4000, 4500, 5000, 5500 };
 const int kLongAttackCastingTime = 10;  // 蓄力时间
 const int kShortAttackDamage[kMaxSkillLevel + 1] = { 0, 1000, 1200, 1400, 1600, 1800 };
 const int kShortAttackRange[kMaxSkillLevel + 1] = { 0, 100, 110, 120, 130, 140 };
 const int kShieldTime[kMaxSkillLevel + 1] = { 0, 100, 120, 140, 160, 180 };
-const int kDashSpeed[kMaxSkillLevel + 1] = { 100, 120, 140, 160, 180, 200 };
+const int kDashSpeed[kMaxSkillLevel + 1] = { 0, 120, 140, 160, 180, 200 };
 const int kDashTime = 10;
-const int kVisionUpValue[kMaxSkillLevel + 1] = { 0, 1000, 1500, 2000, 2500, 3000 };
+const int kVision[kMaxSkillLevel + 1] = { 5000, 6000, 7000, 8000, 9000, 10000 };
 const int kHealthUpValue = 2000;
 
 const int kSkillCD[kSkillTypes] = { 80, 80, 100, 100, 0, 0 };
@@ -69,7 +69,7 @@ struct Object {  // 视野内物体的公开可见属性
 	Position pos;
 	double radius;
 	int shield_time;  // 距离该单位护盾结束的时间， 0 表示无护盾
-	int long_attack_casting;  // 距离此单位发动的 Long Attack 命中剩余的时间，-1 表示未发动此技能
+	int long_attack_casting;  // 距离此单位发动的 Long Attack 蓄力时间结束剩余的时间，-1 表示未发动此技能
 };
 
 struct MapInfo {
