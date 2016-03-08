@@ -15,7 +15,7 @@ void Move(int user_id, Speed speed);  // 移动，参数是速度矢量
 void LongAttack(int user_id, int target_id);
 void ShortAttack(int user_id);
 void Shield(int user_id);
-void Teleport(int user_id, Position des);
+void Dash(int user_id);
 void HealthUp(int user_id);
 void UpgradeSkill(int user_id, SkillType skill);
 

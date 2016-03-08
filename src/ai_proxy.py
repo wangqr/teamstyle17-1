@@ -38,11 +38,12 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
                     index = skill_types.index(skill['name'])
                     skill_levels[index] = skill['level']
                     skill_cds[index] = skill['cd']
-                s = '%d %d %d %d %d %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d;' % (
+                s = '%d %d %d %d %d %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d;' % (
                     player['id'], player['health'], player['max_health'], player['vision'], player['ability'], player['r'],
                     player['pos'][0], player['pos'][1], player['pos'][2], player['speed'][0], player['speed'][1], player['speed'][2],
                     skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5],
-                    skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5])
+                    skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5],
+                    player['longattackcasting'], player['shieldtime'], player['dashtime'])
                 ret_str_list.append(s)
             ret_str = ' '.join(ret_str_list)
 
@@ -66,7 +67,7 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
     assert isinstance(dll_message, bytes)
 
     action_name, *msg = str(dll_message)[2:-1].split(sep=' ')
-    skill_types = ['longAttack', 'shortAttack', 'shield', 'teleport', 'visionUp', 'healthUp']
+    skill_types = ['longAttack', 'shortAttack', 'shield', 'dash', 'visionUp', 'healthUp']
     object_types = ['player', 'food', 'nutrient', 'spike', 'target', 'bullet', 'source']
 
     ret = ''

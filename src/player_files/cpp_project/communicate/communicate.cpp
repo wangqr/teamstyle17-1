@@ -24,10 +24,10 @@ void LoadMapInfo(char *info_str) {
 		if (info_str[ed] == ';') {  // 不同 Object 的数据以 ';' 分隔
 			info_str[ed] = 0;
 			Object *obj = &MAP_.objects[object_counter];
-			sscanf(info_str + st, "%d%d%d%lf%lf%lf%lf%d%d", &obj->id, &obj->ai_id, &obj->type,
+			sscanf(info_str + st, "%d%d%d%lf%lf%lf%lf%d%d", &obj->id, &obj->team_id, &obj->type,
 				&obj->pos.x, &obj->pos.y, &obj->pos.z,
 				&obj->radius, &obj->long_attack_casting, &obj->shield_time);
-			if (obj->type == PLAYER && obj->ai_id == -2) {
+			if (obj->type == PLAYER && obj->team_id == -2) {
 				obj->type = BOSS;  // 判断一个物体是 BOSS
 			}
 			++object_counter;
@@ -49,19 +49,20 @@ void LoadPlayerStatus(char *status_str) {
 		if (status_str[ed] == ';') {  // 不同 Object 的数据以 ';' 分隔
 			status_str[ed] = 0;
 			PlayerObject *player = &STATUS_.objects[object_counter];
-			sscanf(status_str + st, "%d%d%d%d%d%lf%lf%lf%lf%lf%lf%lf%d%d%d%d%d%d%d%d%d%d%d%d", &player->id, &player->health, 
+			sscanf(status_str + st, "%d%d%d%d%d%lf%lf%lf%lf%lf%lf%lf%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d", &player->id, &player->health,
 				&player->max_health, &player->vision, &player->ability,
 				&player->radius, &player->pos.x, &player->pos.y, &player->pos.z,
 				&player->speed.x, &player->speed.y, &player->speed.z,
 				&player->skill_level[0], &player->skill_level[1], &player->skill_level[2],
 				&player->skill_level[3], &player->skill_level[4], &player->skill_level[5],
 				&player->skill_cd[0], &player->skill_cd[1], &player->skill_cd[2],
-				&player->skill_cd[3], &player->skill_cd[4], &player->skill_cd[5]);
+				&player->skill_cd[3], &player->skill_cd[4], &player->skill_cd[5],
+				&player->long_attack_casting, &player->shield_time, &player->dash_time);
 			++object_counter;
 			st = ed + 1;
 		} else if (status_str[ed] == '|') {
 			status_str[ed] = 0;
-			sscanf(status_str + st, "%d", &STATUS_.ai_id);
+			sscanf(status_str + st, "%d", &STATUS_.team_id);
 			st = ed + 1;
 		}
 		++ed;
@@ -118,8 +119,9 @@ void Shield(int user_id) {
 	UseSkill(SHIELD, user_id, -1, tmp);
 }
 
-void Teleport(int user_id, Position des) {
-	UseSkill(TELEPORT, user_id, -1, des);
+void Dash(int user_id) {
+	Position tmp = { -1, -1, -1 };
+	UseSkill(DASH, user_id, -1, tmp);
 }
 
 void UpgradeSkill(int user_id, SkillType skill) {

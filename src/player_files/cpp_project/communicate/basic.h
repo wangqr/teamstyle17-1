@@ -5,7 +5,7 @@
 
 #define INF_ 2147483647
 
-const int kMapSize = 40000;
+const int kMapSize = 20000;
 const int kMaxObjectNumber = 10000;
 const int kMaxPlayerObjectNumber = 10;  // 实际上应该不会有那么多
 
@@ -36,7 +36,7 @@ enum SkillType {
 	LONG_ATTACK,
 	SHORT_ATTACK,
 	SHIELD,
-	TELEPORT,
+	DASH,
 
 	VISION_UP,  // 被动技能
 	HEALTH_UP,  // 非技能
@@ -53,7 +53,8 @@ const int kLongAttackCastingTime = 10;  // 蓄力时间
 const int kShortAttackDamage[kMaxSkillLevel + 1] = { 0, 1000, 1200, 1400, 1600, 1800 };
 const int kShortAttackRange[kMaxSkillLevel + 1] = { 0, 100, 110, 120, 130, 140 };
 const int kShieldTime[kMaxSkillLevel + 1] = { 0, 100, 120, 140, 160, 180 };
-const int kTeleportMaxDistance[kMaxSkillLevel + 1] = { 0, 10000, 11000, 12000, 13000, INF_ };
+const int kDashSpeed[kMaxSkillLevel + 1] = { 100, 120, 140, 160, 180, 200 };
+const int kDashTime = 10;
 const int kVisionUpValue[kMaxSkillLevel + 1] = { 0, 1000, 1500, 2000, 2500, 3000 };
 const int kHealthUpValue = 2000;
 
@@ -63,7 +64,7 @@ const int kBasicSkillPrice[kSkillTypes] = { 1, 1, 2, 2, 2, 1 };  // 基础技能
 
 struct Object {  // 视野内物体的公开可见属性
 	int id;
-	int ai_id;  // -2 表示中立单位，0 ~ n-1 是选手
+	int team_id;  // -2 表示中立单位，0 ~ n-1 是选手
 	ObjectType type;
 	Position pos;
 	double radius;
@@ -85,13 +86,16 @@ struct PlayerObject {  // 己方单位的可见属性
 	double radius;
 	Position pos;
 	Speed speed;  // 当前移动速度
+	int long_attack_casting;
+	int shield_time;
+	int dash_time;
 	int ability;  // 技能点
 	int skill_level[kSkillTypes];
 	int skill_cd[kSkillTypes];  // -1 表示此技能不能使用，0 表示可用
 };
 
 struct PlayerStatus {
-	int ai_id;  // 自己的队伍编号
+	int team_id;  // 自己的队伍编号
 	PlayerObject objects[kMaxPlayerObjectNumber];  // 自己所有单位的列表
 	int objects_number;
 };
