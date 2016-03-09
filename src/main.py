@@ -239,6 +239,7 @@ class Game:
                 self._logger.debug('<<<<<<<< fin')
                 self._logger.info('****GAME END****')
                 self._logger.info('WINNER = %d', json.loads(next_action[2].action_json)['ai_id'])
+                next_action[2].set_timestamp(self._last_action_timestamp)
                 self._run_logger.sig.put(next_action[2].action_json)
                 break
             if self.__logic_time(next_action[0]) > self._last_action_timestamp:

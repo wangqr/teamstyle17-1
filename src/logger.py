@@ -62,9 +62,9 @@ class RepGame:
                 self._timer.stop()
                 self._timer.elapsed = self.__real_time(self._last_action_timestamp)
                 return
-            t = 0
-            if self._action_buffer is not None:
-                t = self.__timeout_before_round(min(self._action_buffer[0], self._last_action_timestamp + 1))
+            if self._action_buffer is None:
+                self._action_buffer = self.queue.get()
+            t = self.__timeout_before_round(min(self._action_buffer[0], self._last_action_timestamp + 1))
             if not self._timer.running or not self.sig.empty() or t > 0:
                 try:
                     q = self.sig.get(block=True, timeout=(t if self._timer.running else None))
@@ -86,15 +86,15 @@ class RepGame:
                     q.put(0)
                     return
             if next_action is None:
-                if self._action_buffer and self._action_buffer[0] <= self.__logic_time(self.current_time):
+                if self._action_buffer[0] <= self.__logic_time(self.current_time):
                     next_action = self._action_buffer
                     self._action_buffer = None
                 else:
-                    next_action = self.queue.get()
-            while next_action[0] > self._last_action_timestamp and self.__logic_time(
-                    self.current_time) > self._last_action_timestamp:
-                self._logic.nextTick()
-                self._last_action_timestamp += 1
+                    while self._action_buffer[0] > self._last_action_timestamp and self.__logic_time(
+                            self.current_time) > self._last_action_timestamp:
+                        self._logic.nextTick()
+                        self._last_action_timestamp += 1
+                    continue
             if next_action[0] < self.__logic_time(self.current_time):
                 self._timer.current_time = self.__real_time(next_action[0] + 1)
             elif next_action[0] > self.__logic_time(self.current_time):
@@ -153,7 +153,7 @@ class RepManager:
     def __init__(self, rep_file_name: str, verbose: bool):
         self._rep_file = rep_file_name
         self._games = sortedcontainers.SortedDict()
-        self.__info_callback = lambda x: None
+        self._info_callback = lambda x: None
         self._verbose = verbose
         self._active_game = RepGame(verbose=verbose, info_callback=self._info_callback)
         with gzip.open(rep_file_name, 'rt', encoding='utf-8') as rep_file:
@@ -183,13 +183,12 @@ class RepManager:
             else:
                 self._active_game.enqueue(timestamp, act)
 
-    def _info_callback(self, obj: str):
-        self.__info_callback(obj)
+    def __info_callback(self, obj: str):
+        self._info_callback(obj)
 
     def mainloop(self):
         q = True
         while q:
-
             # 实际上开始指令应该是由界面来发送
             self._active_game._timer.start()
 
