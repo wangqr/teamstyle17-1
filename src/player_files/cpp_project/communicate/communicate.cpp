@@ -24,7 +24,7 @@ void LoadMapInfo(char *info_str) {
 		if (info_str[ed] == ';') {  // 不同 Object 的数据以 ';' 分隔
 			info_str[ed] = 0;
 			Object *obj = &MAP_.objects[object_counter];
-			sscanf(info_str + st, "%d%d%d%lf%lf%lf%lf%d%d", &obj->id, &obj->team_id, &obj->type,
+			sscanf(info_str + st, "%d%d%d%lf%lf%lf%lf%d%d", &obj->id, &obj->team_id, (int *) &obj->type,
 				&obj->pos.x, &obj->pos.y, &obj->pos.z,
 				&obj->radius, &obj->long_attack_casting, &obj->shield_time);
 			if (obj->type == PLAYER && obj->team_id == -2) {
