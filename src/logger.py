@@ -155,7 +155,7 @@ class RepManager:
         self._games = sortedcontainers.SortedDict()
         self._info_callback = lambda x: None
         self._verbose = verbose
-        self._active_game = RepGame(verbose=verbose, info_callback=self._info_callback)
+        self._active_game = RepGame(verbose=verbose, info_callback=self.__info_callback)
         with gzip.open(rep_file_name, 'rt', encoding='utf-8') as rep_file:
             for line in rep_file:
                 j = json.loads(line)
