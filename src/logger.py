@@ -230,3 +230,7 @@ class RepManager:
                 if timestamp > self._active_game._last_action_timestamp:
                     self._active_game.set_round(timestamp)
         self.sig.put(True)
+
+    @property
+    def current_time(self) -> float:
+        return self._active_game.current_time
