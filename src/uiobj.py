@@ -135,9 +135,9 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
         info_list = json.loads(msg)
         for info in info_list:
             if info['info'] == 'object':
-                s = '%d %d %d %d %d %.10f %.10f %.10f %.10f %d %d;' % (
+                s = '%d %d %d %d %d %.10f %.10f %.10f %.10f %d %d %d;' % (
                     info_types.index(info['info']), info['time'], info['id'], info['ai_id'], object_types.index(info['type']),
-                    info['pos'][0], info['pos'][1], info['pos'][2], info['r'], -1, 0)  # info['longattackcasting'], info['shieldtime'] 来自逻辑的增量更新中没有这两个参数，初始化为默认值
+                    info['pos'][0], info['pos'][1], info['pos'][2], info['r'], -1, 0, info['nutrientmove'])  # info['longattackcasting'], info['shieldtime'] 来自逻辑的增量更新中没有这两个参数，初始化为默认值
                 ret_str_list.append(s)
 
             elif info['info'] == 'delete':
