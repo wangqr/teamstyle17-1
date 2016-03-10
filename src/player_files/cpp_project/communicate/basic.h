@@ -11,7 +11,7 @@ const int kMaxPlayerObjectNumber = 10;  // 实际上应该不会有那么多
 
 const double kDeathRatio = 1 / 4;  // 当前生命值与历史最大生命值之比小于此值即告死亡
 const double kEatableRatio = 5 / 6;  // 目标单位半径与自己单位半径的比值小于此值时可以食用
-const double kSpikeDamage = 1 / 3;
+const double kDevourDamage = 1 / 3;
 const int kMaxMoveSpeed = 100;  // 未使用 Dash 时的最大速度
 const int kFoodHealth = 10;
 
@@ -24,11 +24,11 @@ struct Position {
 typedef Position Speed;
 
 enum ObjectType {
-	PLAYER,
-	FOOD,
-	NUTRIENT,
-	SPIKE,
-	BOSS,
+	PLAYER,  // 玩家单位
+	ENERGY,  // 能量源
+	ADVANCED_ENERGY,  // 高级能量源
+	DEVOUR,  // 吞噬者
+	BOSS,  // 目标生物
 	kObjectTypes
 };
 
@@ -54,7 +54,7 @@ const int kShortAttackDamage[kMaxSkillLevel + 1] = { 0, 1000, 1200, 1400, 1600, 
 const int kShortAttackRange[kMaxSkillLevel + 1] = { 0, 100, 110, 120, 130, 140 };
 const int kShieldTime[kMaxSkillLevel + 1] = { 0, 100, 120, 140, 160, 180 };
 const int kDashSpeed[kMaxSkillLevel + 1] = { 0, 120, 140, 160, 180, 200 };
-const int kDashTime = 10;
+const int kDashTime[kMaxSkillLevel + 1] = { 0 };
 const int kVision[kMaxSkillLevel + 1] = { 5000, 6000, 7000, 8000, 9000, 10000 };
 const int kHealthUpValue = 2000;
 
