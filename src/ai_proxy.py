@@ -4,6 +4,7 @@
 # AI Proxy
 
 import ctypes
+import main
 import json
 import sys
 from threading import Thread
@@ -57,7 +58,7 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
             ret_str = ' '.join(ret_str_list)
 
     except KeyError as err:
-        print('[ERROR] ai_proxy exception %s [%s]' % (type(err).__name__, str(err)))
+        main.root_logger.error('ai_proxy exception %s [%s]' % (type(err).__name__, str(err)))
 
     # print("[INFO] ret for dll [%s]" % ret_str)
     return ret_str
@@ -114,7 +115,6 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
 
 class AICore(object):
     def __init__(self, ai_id, path):
-        assert path.endswith(('.dll', '.so'))
         self.id = ai_id
         self.path = path
         self.dll_main = self.load_dll_main()
@@ -122,7 +122,11 @@ class AICore(object):
 
     def load_dll_main(self):
         # Load DLL main function
-        dll = ctypes.cdll.LoadLibrary(self.path)
+        try:
+            dll = ctypes.cdll.LoadLibrary(self.path)
+        except OSError:
+            main.root_logger.warn('It seems that AI "%s" is not build for current architecture.', self.path)
+            return lambda *x: None
         dll_main = dll.StartAI  # StartAi is the main function in dll (a C function)
         return dll_main
 
@@ -138,10 +142,7 @@ class AICore(object):
         try:
             self.dll_main(c_communicate, self.id)
         except Exception as err:
-            print('[ERROR] ai%d exception %s [%s]' % (self.id, err.__name__, str(err)))
-        finally:
-            print('[INFO] ai%d exit.' % self.core.id)
-            sys.exit()
+            main.root_logger.error('[ERROR] ai%d exception %s [%s]' % (self.id, err.__name__, str(err)))
 
 
 class AIThread(object):

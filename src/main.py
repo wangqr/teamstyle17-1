@@ -19,7 +19,6 @@ options:
 """
 
 import docopt
-import gzip
 import queue
 import json
 import random
@@ -284,7 +283,7 @@ class Game:
             j = json.loads(obj)
             winner_id = -2
             for js in j:
-                if js['info']=='end':
+                if js['info'] == 'end':
                     winner_id = js['ai_id']
             self.enqueue(0, action.Action('{"action":"game_end", "ai_id":%d}' % winner_id, 'game_end', None))
         self._info_callback(obj)
@@ -317,8 +316,16 @@ def push_queue_ai_proxy(obj: str, game_obj: Game):
     return ret_str
 
 
+def _sigint_handler(*args, **kwargs):
+    global root_logger
+    root_logger.error('SIGINT')
+    time.sleep(0.3)
+    os.kill(os.getpid(), signal.SIGTERM)
+
+
 def main():
     global root_logger
+    signal.signal(signal.SIGINT, _sigint_handler)
     args = docopt.docopt(__doc__,
                          version='ts17-platform ' + __version__ + ' [ts17-core ver ' + ts17core.__version__ + ']')
     root_logger.basic_config(level=(Logging.DEBUG if args['-V'] else Logging.INFO))
@@ -344,6 +351,38 @@ def info_call_back(ui_obj, obj: str):
 
 def run_main(args: dict):
     global root_logger
+
+    # check duplicate
+    if len(args['<ai>']) != len(set(args['<ai>'])):
+        root_logger.error('Duplicate items in AI list. You should make copies if needed.')
+        return
+
+    for x in args['<ai>']:
+        if not os.path.isfile(x) or not x.endswith(('.dll', '.so')):
+            root_logger.error('"%s" is not a valid AI.', x)
+            return
+
+    # check time limit
+    if args['-t'] is not None:
+        try:
+            args['-t'] = float(args['-t'])
+        except ValueError:
+            root_logger.error('Time limit should be a positive number.')
+            return
+        if args['-t'] <= 0:
+            root_logger.error('Time limit should be a positive number.')
+            return
+
+    # check seed
+    if args['-s'] is not None:
+        try:
+            args['-s'] = int(args['-s'])
+        except ValueError:
+            root_logger.error('Seed should be in range [0, 4294967296).')
+            return
+        if args['-s'] < 0 or args['-s'] >= 4294967296:
+            root_logger.error('Seed should be in range [0, 4294967296).')
+            return
 
     rep_file_name = args['-r'] or ('ts17_' + time.strftime('%m%d%H%M%S') + '.rpy')
 
@@ -385,12 +424,18 @@ def replay_main(args: dict):
     if not rep_file_name.endswith('.rpy'):
         rep_file_name += '.rpy'
 
+    if not os.path.isfile(rep_file_name):
+        root_logger.error('"%s" is not a valid replay file.', rep_file_name)
+        return
+
     rep_mgr = logger.RepManager(rep_file_name=rep_file_name, verbose=args['-V'])
 
     game_ui_obj = None
     if args['-u']:
         game_ui_obj = uiobj.UIObject(rep_mgr, ai_id=-1, port=int(args['-u']))
         rep_mgr._info_callback = lambda x: info_call_back(game_ui_obj, x)
+        rep_mgr._info_callback = lambda: bool(
+            game_ui_obj and game_ui_obj.is_alive() and game_ui_obj.send_thread and game_ui_obj.send_thread.is_alive())
         game_ui_obj.start()
 
     rep_mgr.mainloop()
@@ -398,5 +443,16 @@ def replay_main(args: dict):
     if game_ui_obj and game_ui_obj.is_alive():
         game_ui_obj.exit()
 
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception:
+        print('Unexpected error.')
+        time.sleep(0.3)
+        os.kill(os.getpid(), signal.SIGTERM)
+'''
+
 if __name__ == '__main__':
     main()
+'''

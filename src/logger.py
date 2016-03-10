@@ -156,19 +156,10 @@ class RepManager:
         self._info_callback = lambda x: None
         self._verbose = verbose
         self._active_game = RepGame(verbose=verbose, info_callback=self.__info_callback)
-        with gzip.open(rep_file_name, 'rt', encoding='utf-8') as rep_file:
-            for line in rep_file:
-                j = json.loads(line)
-                t = j.get('time')
-                if t is None:
-                    t = 0
-                k = j.get('action')
-                if k != 'game_end':
-                    self._active_game.queue.put((t, action.Action(line, 'instruction', None)))
-                else:
-                    self._active_game.queue.put((t, action.Action(line, 'game_end', None)))
+        _load_queue(rep_file_name, self._active_game.queue)
         self._rep_thread = None
         self.sig = queue.Queue()
+        self._ui_running = lambda: False
 
     def enqueue(self, timestamp, act):
         if act.action_name == '跳转到某个时间点':
@@ -193,7 +184,10 @@ class RepManager:
             self._active_game._timer.start()
 
             self._active_game.mainloop()
-            q = self.sig.get()
+            if self._ui_running():
+                q = self.sig.get()
+            else:
+                q = False
 
     def set_round(self, timestamp):
         # 醉了，需要重新检查
@@ -211,17 +205,7 @@ class RepManager:
             pos = self._games.bisect(timestamp)
             if pos == 0:
                 self._active_game = RepGame(verbose=self._verbose, info_callback=self._info_callback)
-                with gzip.open(self._rep_file, 'rt', encoding='utf-8') as rep_file:
-                    for line in rep_file:
-                        j = json.loads(line)
-                        t = j.get('time')
-                        if t is None:
-                            t = 0
-                        k = j.get('action')
-                        if k != 'game_end':
-                            self._active_game.queue.put((t, action.Action(line, 'instruction', None)))
-                        else:
-                            self._active_game.queue.put((t, action.Action(line, 'game_end', None)))
+                _load_queue(self._rep_file, self._active_game.queue)
                 if timestamp:
                     self._active_game.set_round(timestamp)
             else:
@@ -233,3 +217,21 @@ class RepManager:
     @property
     def current_time(self) -> float:
         return self._active_game.current_time
+
+
+def _load_queue(file_name: str, target: queue.Queue):
+    try:
+        with gzip.open(file_name, 'rt', encoding='utf-8') as rep_file:
+            for line in rep_file:
+                j = json.loads(line)
+                t = j.get('time')
+                if t is None:
+                    t = 0
+                k = j.get('action')
+                if k != 'game_end':
+                    target.put((t, action.Action(line, 'instruction', None)))
+                else:
+                    target.put((t, action.Action(line, 'game_end', None)))
+    except OSError:
+        main.root_logger.error('Corrupted replay file: %s', file_name)
+        target.put((0, action.Action('{"action":"game_end","ai_id":-2,"time":0}', 'game_end', None)))
