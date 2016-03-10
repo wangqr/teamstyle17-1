@@ -6,7 +6,6 @@
 import ctypes
 import main
 import json
-import sys
 from threading import Thread
 
 max_message_length = 1000000
