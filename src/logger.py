@@ -65,6 +65,8 @@ class RepGame:
             if self._action_buffer is None:
                 self._action_buffer = self.queue.get()
             t = self.__timeout_before_round(min(self._action_buffer[0], self._last_action_timestamp + 1))
+            if t < 0:
+                t = 0
             if not self._timer.running or not self.sig.empty() or t > 0:
                 try:
                     q = self.sig.get(block=True, timeout=(t if self._timer.running else None))
