@@ -4,8 +4,8 @@
 """
 usage:
     ts17 [-v|--version] [-h|--help]
-    ts17 run [-r <repfile>] [-s <seed>] [-t <timelimit>] [-u <u>] [-V] <ai> ...
-    ts17 replay [-u <port>] [-V] <repfile>
+    ts17 run [-r <repfile>] [-s <seed>] [-t <timelimit>] [-T <T>] [-u <u>] [-V] <ai> ...
+    ts17 replay [-u <u>] [-V] <repfile>
 
 options:
     -h, --help     show this message
@@ -16,9 +16,9 @@ options:
     -t <timelimit> set the time limit of the game in seconds
     -V             verbose output
 
-internal options:
-    DO NOT USE THESE OPTIONS!
+internal options:    [DO NOT USE THESE OPTIONS!]
     -u <u>
+    -T <T>
 """
 
 import docopt
@@ -431,7 +431,7 @@ def replay_main(args: dict):
         root_logger.error('"%s" is not a valid replay file.', rep_file_name)
         return
 
-    rep_mgr = logger.RepManager(rep_file_name=rep_file_name, verbose=args['-V'])
+    rep_mgr = logger.RepManager(rep_file_name=rep_file_name, verbose=args['-V'], start_paused=bool(args['-u']))
 
     game_ui_obj = None
     if args['-u']:

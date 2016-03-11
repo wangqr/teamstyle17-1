@@ -152,16 +152,18 @@ class RepGame:
 
 
 class RepManager:
-    def __init__(self, rep_file_name: str, verbose: bool):
+    def __init__(self, rep_file_name: str, verbose: bool, start_paused: bool):
         self._rep_file = rep_file_name
         self._games = sortedcontainers.SortedDict()
         self._info_callback = lambda _: None
         self._verbose = verbose
         self._active_game = RepGame(verbose=verbose, info_callback=self.__info_callback)
         _load_queue(rep_file_name, self._active_game.queue)
+        self._active_game.queue.get()[1].run(self._active_game._logic)
         self._rep_thread = None
         self.sig = queue.Queue()
         self._ui_running = lambda: False
+        self._start_paused = start_paused
 
     def enqueue(self, timestamp, act):
         if act.action_name == '_set_time':
@@ -182,6 +184,9 @@ class RepManager:
     def mainloop(self):
         q = True
         while q:
+            if not self._start_paused:
+                self._active_game._timer.start()
+
             self._active_game.mainloop()
             if self._ui_running():
                 q = self.sig.get()
@@ -207,6 +212,8 @@ class RepManager:
                 _load_queue(self._rep_file, self._active_game.queue)
                 if timestamp:
                     self._active_game.set_round(timestamp)
+                else:
+                    self._active_game.queue.get()[1].run(self._active_game._logic)
             else:
                 self._active_game = self._games.iloc[pos - 1]
                 if timestamp > self._active_game._last_action_timestamp:
