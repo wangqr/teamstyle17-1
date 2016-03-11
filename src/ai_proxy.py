@@ -124,7 +124,7 @@ class AICore(object):
         try:
             dll = ctypes.cdll.LoadLibrary(self.path)
         except OSError:
-            main.root_logger.warn('It seems that AI "%s" is not build for current architecture.', self.path)
+            main.root_logger.warn('It seems that AI "%s" is not built for current architecture.', self.path)
             return lambda *x: None
         dll_main = dll.StartAI  # StartAi is the main function in dll (a C function)
         return dll_main
