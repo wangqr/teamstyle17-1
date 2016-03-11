@@ -72,41 +72,45 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
 
     ret = ''
 
-    if action_name in ['query_map', 'query_status']:
-        info_send = dict(action=action_name, time=0, ai_id=ai_id)
-        info_send['id'] = int(msg[0]) if action_name == 'query_status' and int(msg[0]) != -1 else ai_id + 1
-        msg_send = json.dumps(info_send)
-        msg_from_logic = enqueue_func(msg_send)
-        ret = load_msg_from_logic(msg_from_logic, action_name, ai_id, skill_types, object_types)
+    try:
+        if action_name in ['query_map', 'query_status']:
+            info_send = dict(action=action_name, time=0, ai_id=ai_id)
+            info_send['id'] = int(msg[0]) if action_name == 'query_status' and int(msg[0]) != -1 else ai_id + 1
+            msg_send = json.dumps(info_send)
+            msg_from_logic = enqueue_func(msg_send)
+            ret = load_msg_from_logic(msg_from_logic, action_name, ai_id, skill_types, object_types)
 
-    elif action_name == 'move':
-        info_send = dict(action='move', time=0, ai_id=ai_id, id=int(msg[0]), x=float(msg[1]), y=float(msg[2]), z=float(msg[3]))
-        info_send['id'] = int(msg[0]) if int(msg[0]) != -1 else ai_id + 1  # For Debug
-        msg_send = json.dumps(info_send)
-        enqueue_func(msg_send)
+        elif action_name == 'move':
+            info_send = dict(action='move', time=0, ai_id=ai_id, id=int(msg[0]), x=float(msg[1]), y=float(msg[2]), z=float(msg[3]))
+            info_send['id'] = int(msg[0]) if int(msg[0]) != -1 else ai_id + 1  # For Debug
+            msg_send = json.dumps(info_send)
+            enqueue_func(msg_send)
 
-    elif action_name == 'use_skill' and int(msg[0]) in range(4):  # 技能在技能列表中
-        info_send = dict(action='use_skill', time=0, ai_id=ai_id, skill_type=skill_types[int(msg[0])],
-                         id=int(msg[1]), target=int(msg[2]), x=float(msg[3]), y=float(msg[4]), z=float(msg[5]))
-        info_send['id'] = int(msg[1]) if int(msg[1]) != -1 else ai_id + 1  # For Debug
-        msg_send = json.dumps(info_send)
-        enqueue_func(msg_send)
+        elif action_name == 'use_skill' and int(msg[0]) in range(4):  # 技能在技能列表中
+            info_send = dict(action='use_skill', time=0, ai_id=ai_id, skill_type=skill_types[int(msg[0])],
+                             id=int(msg[1]), target=int(msg[2]), x=float(msg[3]), y=float(msg[4]), z=float(msg[5]))
+            info_send['id'] = int(msg[1]) if int(msg[1]) != -1 else ai_id + 1  # For Debug
+            msg_send = json.dumps(info_send)
+            enqueue_func(msg_send)
 
-    elif action_name == 'upgrade_skill' and int(msg[0]) in range(6):
-        info_send = dict(action='upgrade_skill', time=0, skill_type=skill_types[int(msg[0])], ai_id=ai_id, id=int(msg[1]))
-        info_send['id'] = int(msg[1]) if int(msg[1]) != -1 else ai_id + 1  # For Debug
-        msg_send = json.dumps(info_send)
-        enqueue_func(msg_send)
+        elif action_name == 'upgrade_skill' and int(msg[0]) in range(6):
+            info_send = dict(action='upgrade_skill', time=0, skill_type=skill_types[int(msg[0])], ai_id=ai_id, id=int(msg[1]))
+            info_send['id'] = int(msg[1]) if int(msg[1]) != -1 else ai_id + 1  # For Debug
+            msg_send = json.dumps(info_send)
+            enqueue_func(msg_send)
 
-    elif action_name == 'pause':
-        msg_send = r'{"action": "_pause","ai_id": %d}' % ai_id
-        enqueue_func(msg_send)
+        elif action_name == 'pause':
+            msg_send = r'{"action": "_pause","ai_id": %d}' % ai_id
+            enqueue_func(msg_send)
 
-    elif action_name == 'query_time':
-        msg_send = r'{"action": "query_time","ai_id": %d}' % ai_id
-        msg_received = enqueue_func(msg_send)
-        current_time = json.loads(msg_received)['time']  # 返回的字段中应该有 'time'
-        ret = str(int(current_time))
+        elif action_name == 'query_time':
+            msg_send = r'{"action": "query_time","ai_id": %d}' % ai_id
+            msg_received = enqueue_func(msg_send)
+            current_time = json.loads(msg_received)['time']  # 返回的字段中应该有 'time'
+            ret = str(int(current_time))
+    except Exception as err:
+        main.root_logger.error('[ERROR] ai%d exception %s [%s]' % (ai_id, err.__name__, str(err)))
+        ret = ''
 
     set_string_value(string_buffer, ret)
     return ctypes.addressof(string_buffer)
