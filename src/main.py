@@ -177,8 +177,9 @@ class Game:
         self._seed = seed
         self._timer = Timer()
         self._info_callback = lambda _: None
+        self._last_action_timestamp = 0
         self._logger = Logging(
-            timer=lambda: '%d @ %.6f' % (self.__logic_time(self._timer.current_time), self._timer.current_time))
+            timer=lambda: '%d @ %.6f' % (self._last_action_timestamp, self._timer.current_time))
         self._logger.info('game seed = %d', self._seed)
         self._logger.basic_config(level=Logging.DEBUG if verbose else Logging.INFO)
         self._run_logger = logger.RunLogger(filename=rep_file_name)
@@ -189,7 +190,6 @@ class Game:
         self._logic.setInstruction(init_json)
         self._run_logger.sig.put(init_json)
         self._queue = queue.PriorityQueue()
-        self._last_action_timestamp = 0
         self.__action_count = 0
         self._start_paused = start_paused
         self.__pause_field = 0
@@ -443,7 +443,7 @@ def replay_main(args: dict):
     if game_ui_obj and game_ui_obj.is_alive():
         game_ui_obj.exit()
 
-
+'''
 if __name__ == '__main__':
     try:
         main()
@@ -455,4 +455,4 @@ if __name__ == '__main__':
 
 if __name__ == '__main__':
     main()
-'''
+
