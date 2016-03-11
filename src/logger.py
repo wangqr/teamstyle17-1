@@ -164,7 +164,7 @@ class RepManager:
         self._ui_running = lambda: False
 
     def enqueue(self, timestamp, act):
-        if act.action_name == '跳转到某个时间点':
+        if act.action_name == '_set_time':
             self.set_round(timestamp)
         elif act.action_name == '_end':
             self.sig.put(False)
@@ -182,9 +182,6 @@ class RepManager:
     def mainloop(self):
         q = True
         while q:
-            # 实际上开始指令应该是由界面来发送
-            self._active_game._timer.start()
-
             self._active_game.mainloop()
             if self._ui_running():
                 q = self.sig.get()

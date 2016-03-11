@@ -4,7 +4,7 @@
 """
 usage:
     ts17 [-v|--version] [-h|--help]
-    ts17 run [-r <repfile>] [-s <seed>] [-t <timelimit>] [-u <port>] [-V] <ai> ...
+    ts17 run [-r <repfile>] [-s <seed>] [-t <timelimit>] [-u <u>] [-V] <ai> ...
     ts17 replay [-u <port>] [-V] <repfile>
 
 options:
@@ -14,8 +14,11 @@ options:
     -r <repfile>   specify the name of the rep file
     -s <seed>      specify the map seed
     -t <timelimit> set the time limit of the game in seconds
-    -u <port>      open UI socket on the specified port
     -V             verbose output
+
+internal options:
+    DO NOT USE THESE OPTIONS!
+    -u <u>
 """
 
 import docopt
@@ -359,7 +362,7 @@ def run_main(args: dict):
 
     for ai in args['<ai>']:
         if not os.path.isfile(ai) or not ai.endswith(('.dll', '.so')):
-            root_logger.error('"%s" is not a valid AI.', x)
+            root_logger.error('"%s" is not a valid AI.', ai)
             return
 
     # check time limit
@@ -443,7 +446,7 @@ def replay_main(args: dict):
     if game_ui_obj and game_ui_obj.is_alive():
         game_ui_obj.exit()
 
-'''
+
 if __name__ == '__main__':
     try:
         main()
@@ -455,4 +458,4 @@ if __name__ == '__main__':
 
 if __name__ == '__main__':
     main()
-
+'''
