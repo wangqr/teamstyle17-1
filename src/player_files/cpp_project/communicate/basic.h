@@ -26,7 +26,7 @@ typedef Position Speed;
 enum ObjectType {
 	PLAYER,  // 玩家单位
 	ENERGY,  // 能量源
-	ADVANCED_ENERGY,  // 高级能量源
+	ADVANCED_ENERGY,  // 光之隧道
 	DEVOUR,  // 吞噬者
 	BOSS,  // 目标生物
 	kObjectTypes
@@ -54,12 +54,12 @@ const int kShortAttackDamage[kMaxSkillLevel + 1] = { 0, 1000, 1200, 1400, 1600, 
 const int kShortAttackRange[kMaxSkillLevel + 1] = { 0, 100, 110, 120, 130, 140 };
 const int kShieldTime[kMaxSkillLevel + 1] = { 0, 100, 120, 140, 160, 180 };
 const int kDashSpeed[kMaxSkillLevel + 1] = { 0, 120, 140, 160, 180, 200 };
-const int kDashTime[kMaxSkillLevel + 1] = { 0 };
+const int kDashTime[kMaxSkillLevel + 1] = { 0, 40, 40, 40, 40, 80 };
 const int kVision[kMaxSkillLevel + 1] = { 5000, 6000, 7000, 8000, 9000, 10000 };
 const int kHealthUpValue = 2000;
 
 const int kSkillCD[kSkillTypes] = { 80, 80, 100, 100, 0, 0 };
-const int kSkillCost[kSkillTypes] = { 10, 50, 0, 0, 0, 0 };  // 技能使用开销
+const int kSkillCost[kSkillTypes] = { 10, 50, 0, 40, 0, 0 };  // 技能使用开销
 const int kBasicSkillPrice[kSkillTypes] = { 1, 1, 2, 2, 2, 1 };  // 基础技能升级开销
 
 struct Object {  // 视野内物体的公开可见属性
