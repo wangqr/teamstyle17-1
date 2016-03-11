@@ -155,7 +155,7 @@ class RepManager:
     def __init__(self, rep_file_name: str, verbose: bool):
         self._rep_file = rep_file_name
         self._games = sortedcontainers.SortedDict()
-        self._info_callback = lambda x: None
+        self._info_callback = lambda _: None
         self._verbose = verbose
         self._active_game = RepGame(verbose=verbose, info_callback=self.__info_callback)
         _load_queue(rep_file_name, self._active_game.queue)

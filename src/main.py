@@ -357,8 +357,8 @@ def run_main(args: dict):
         root_logger.error('Duplicate items in AI list. You should make copies if needed.')
         return
 
-    for x in args['<ai>']:
-        if not os.path.isfile(x) or not x.endswith(('.dll', '.so')):
+    for ai in args['<ai>']:
+        if not os.path.isfile(ai) or not ai.endswith(('.dll', '.so')):
             root_logger.error('"%s" is not a valid AI.', x)
             return
 
@@ -434,7 +434,7 @@ def replay_main(args: dict):
     if args['-u']:
         game_ui_obj = uiobj.UIObject(rep_mgr, ai_id=-1, port=int(args['-u']))
         rep_mgr._info_callback = lambda x: info_call_back(game_ui_obj, x)
-        rep_mgr._info_callback = lambda: bool(
+        rep_mgr._ui_running = lambda: bool(
             game_ui_obj and game_ui_obj.is_alive() and game_ui_obj.send_thread and game_ui_obj.send_thread.is_alive())
         game_ui_obj.start()
 
