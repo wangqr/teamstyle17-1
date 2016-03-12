@@ -403,9 +403,11 @@ def run_main(args: dict):
         except ValueError:
             root_logger.error('parameter error.')
             return
-        if args['-T'] <= 0:
+        if args['-T'] < 0:
             root_logger.error('parameter error.')
             return
+    else:
+        args['-T'] = 0
 
     # check ui port
     if args['-u'] is not None:
