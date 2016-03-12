@@ -158,7 +158,7 @@ class RepManager:
         self._info_callback = lambda _: None
         self._verbose = verbose
         self._active_game = RepGame(verbose=verbose, info_callback=self.__info_callback)
-        _load_queue(rep_file_name, self._active_game.queue)
+        self._rounds = _load_queue(rep_file_name, self._active_game.queue)
         self._active_game.queue.get()[1].run(self._active_game._logic)
         self._rep_thread = None
         self.sig = queue.Queue()
@@ -171,6 +171,11 @@ class RepManager:
         elif act.action_name == '_end':
             self.sig.put(False)
             self._active_game.sig.put(0)
+        elif act.action_name == '_query_rounds':
+
+            # 危险的代码
+            act.return_queue.put('%d\n' % self._rounds)
+
         else:
             if self._active_game._action_buffer is None and self._active_game.queue.empty():
                 self._active_game.enqueue(timestamp, act)
@@ -226,6 +231,7 @@ class RepManager:
 
 
 def _load_queue(file_name: str, target: queue.Queue):
+    r = 0
     try:
         with gzip.open(file_name, 'rt', encoding='utf-8') as rep_file:
             for line in rep_file:
@@ -237,7 +243,10 @@ def _load_queue(file_name: str, target: queue.Queue):
                 if k != 'game_end':
                     target.put((t, action.Action(line, 'instruction', None)))
                 else:
+                    r = t
                     target.put((t, action.Action(line, 'game_end', None)))
     except OSError:
         main.root_logger.error('Corrupted replay file: %s', file_name)
         target.put((0, action.Action('{"action":"game_end","ai_id":-2,"time":0}', 'game_end', None)))
+    finally:
+        return r
