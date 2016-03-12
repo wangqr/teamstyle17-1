@@ -399,11 +399,22 @@ def run_main(args: dict):
     # check game type
     if args['-T'] is not None:
         try:
-            args['-T'] = int(args['-t'])
+            args['-T'] = int(args['-T'])
         except ValueError:
             root_logger.error('parameter error.')
             return
         if args['-T'] <= 0:
+            root_logger.error('parameter error.')
+            return
+
+    # check ui port
+    if args['-u'] is not None:
+        try:
+            args['-u'] = int(args['-u'])
+        except ValueError:
+            root_logger.error('parameter error.')
+            return
+        if args['-u'] <= 0 or args['-u'] >= 65536:
             root_logger.error('parameter error.')
             return
 
@@ -451,6 +462,17 @@ def replay_main(args: dict):
     if not os.path.isfile(rep_file_name):
         root_logger.error('"%s" is not a valid replay file.', rep_file_name)
         return
+
+    # check ui port
+    if args['-u'] is not None:
+        try:
+            args['-u'] = int(args['-u'])
+        except ValueError:
+            root_logger.error('parameter error.')
+            return
+        if args['-u'] <= 0 or args['-u'] >= 65536:
+            root_logger.error('parameter error.')
+            return
 
     rep_mgr = logger.RepManager(rep_file_name=rep_file_name, verbose=args['-V'], start_paused=bool(args['-u']))
 
