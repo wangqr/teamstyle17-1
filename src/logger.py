@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import collections
 import gzip
 import json
 import queue
@@ -45,7 +46,7 @@ class RepGame:
             timer=lambda: '%d @ %.6f' % (self.__logic_time(self._timer.current_time), self._timer.current_time))
         self._logger.basic_config(level=main.Logging.DEBUG if verbose else main.Logging.INFO)
         self._logic = ts17core.interface.Interface(info_callback)
-        self.queue = queue.Queue()
+        self.queue = collections.deque()
         self.sig = queue.Queue()
         self._last_action_timestamp = 0
         self._action_buffer = None
@@ -57,12 +58,12 @@ class RepGame:
     def mainloop(self):
         while 1:
             next_action = None
-            if self._action_buffer is None and self.queue.empty():
+            if self._action_buffer is None and not self.queue:
                 self._timer.stop()
                 self._timer.elapsed = self.__real_time(self._last_action_timestamp)
                 return
             if self._action_buffer is None:
-                self._action_buffer = self.queue.get()
+                self._action_buffer = self.queue.popleft()
             t = self.__timeout_before_round(min(self._action_buffer[0], self._last_action_timestamp + 1))
             if t < 0:
                 t = 0
@@ -108,6 +109,7 @@ class RepGame:
             while next_action[0] > self._last_action_timestamp:
                 self._logic.nextTick()
                 self._last_action_timestamp += 1
+            next_action[1].set_timestamp(self._last_action_timestamp)
             next_action[1].run(self._logic)
             self._logger.debug('<<<<<<<< fin')
 
@@ -136,8 +138,8 @@ class RepGame:
         if timestamp > self._last_action_timestamp:
             self._timer.stop()
             self._timer.elapsed = self.__real_time(timestamp)
-            if self._action_buffer is None and not self.queue.empty():
-                self._action_buffer = self.queue.get()
+            if self._action_buffer is None and self.queue:
+                self._action_buffer = self.queue.popleft()
             while self._action_buffer and self._action_buffer[0] < timestamp:
                 while self._action_buffer[0] > self._last_action_timestamp:
                     self._logic.nextTick()
@@ -146,8 +148,8 @@ class RepGame:
                     self._timer.elapsed = self.__real_time(self._action_buffer[0])
                     break
                 self._action_buffer[1].run(self._logic)
-                if not self.queue.empty():
-                    self._action_buffer = self.queue.get()
+                if self.queue:
+                    self._action_buffer = self.queue.popleft()
                 else:
                     main.root_logger.error('Unexpected ending of replay file.')
                     break
@@ -164,7 +166,21 @@ class RepManager:
         self._verbose = verbose
         self._active_game = RepGame(verbose=verbose, info_callback=self.__info_callback)
         self._rounds = _load_queue(rep_file_name, self._active_game.queue)
-        self._active_game.queue.get()[1].run(self._active_game._logic)
+        '''
+        dist = self._rounds // 64
+        if dist == 0:
+            dist = 1
+        p_pos = 0
+        buf_p = RepGame(verbose=verbose, info_callback=lambda _: None)
+        buf_q = RepGame(verbose=verbose, info_callback=lambda _: None)
+        copy_rep_game(self._active_game, buf_p)
+        while p_pos < self._rounds:
+            copy_rep_game(buf_p, buf_q)
+            self._games[p_pos] = buf_q
+            p_pos += dist
+            buf_p.set_round(p_pos)
+        '''
+        self._active_game.queue.popleft()[1].run(self._active_game._logic)
         self._rep_thread = None
         self.sig = queue.Queue()
         self._ui_running = lambda: False
@@ -182,7 +198,7 @@ class RepManager:
             act.return_queue.put('%d\n' % self._rounds)
 
         else:
-            if self._active_game._action_buffer is None and self._active_game.queue.empty():
+            if self._active_game._action_buffer is None and not self._active_game.queue:
                 self._active_game.enqueue(timestamp, act)
                 self.sig.put(True)
             else:
@@ -205,7 +221,6 @@ class RepManager:
 
     def set_round(self, timestamp):
         # 醉了，需要重新检查
-        main.root_logger.debug('set round start: %d', timestamp)
         callback_backup = self._info_callback
         self._info_callback = lambda _: None
         self._active_game._timer.stop()
@@ -225,21 +240,22 @@ class RepManager:
                 if timestamp:
                     self._active_game.set_round(timestamp)
                 else:
-                    self._active_game.queue.get()[1].run(self._active_game._logic)
+                    self._active_game.queue.popleft()[1].run(self._active_game._logic)
             else:
                 self._active_game = self._games.iloc[pos - 1]
+                del self._games.iloc[pos - 1]
                 if timestamp > self._active_game._last_action_timestamp:
                     self._active_game.set_round(timestamp)
             self.sig.put(True)
         self._info_callback = callback_backup
-        main.root_logger.debug('set round fin: %d', self._active_game._last_action_timestamp)
+        main.root_logger.info('set round fin: %d', self._active_game._last_action_timestamp)
 
     @property
     def current_time(self) -> float:
         return self._active_game.current_time
 
 
-def _load_queue(file_name: str, target: queue.Queue):
+def _load_queue(file_name: str, target: collections.deque):
     r = 0
     try:
         with gzip.open(file_name, 'rt', encoding='utf-8') as rep_file:
@@ -250,12 +266,22 @@ def _load_queue(file_name: str, target: queue.Queue):
                     t = 0
                 k = j.get('action')
                 if k != 'game_end':
-                    target.put((t, action.Action(line, 'instruction', None)))
+                    target.append((t, action.Action(line, 'instruction', None)))
                 else:
                     r = t
-                    target.put((t, action.Action(line, 'game_end', None)))
+                    target.append((t, action.Action(line, 'game_end', None)))
     except OSError:
         main.root_logger.error('Corrupted replay file: %s', file_name)
-        target.put((0, action.Action('{"action":"game_end","ai_id":-2,"time":0}', 'game_end', None)))
+        target.append((0, action.Action('{"action":"game_end","ai_id":-2,"time":0}', 'game_end', None)))
     finally:
         return r
+
+
+'''
+def copy_rep_game(src: RepGame, dst: RepGame):
+    dst._timer = copy.deepcopy(src._timer)
+    dst.queue = copy.deepcopy(src.queue)
+    dst._logic = copy.deepcopy(src._logic)
+    dst._action_buffer = copy.deepcopy(src._action_buffer)
+    dst._last_action_timestamp = src._last_action_timestamp
+'''
