@@ -242,7 +242,7 @@ class RepManager:
                 else:
                     self._active_game.queue.popleft()[1].run(self._active_game._logic)
             else:
-                self._active_game = self._games.iloc[pos - 1]
+                self._active_game = self._games[self._games.iloc[pos - 1]]
                 del self._games.iloc[pos - 1]
                 if timestamp > self._active_game._last_action_timestamp:
                     self._active_game.set_round(timestamp)
