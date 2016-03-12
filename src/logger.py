@@ -41,7 +41,6 @@ class RepGame:
 
     def __init__(self, verbose: bool, info_callback):
         self._timer = main.Timer()
-        self._info_callback = lambda _: None
         self._logger = main.Logging(
             timer=lambda: '%d @ %.6f' % (self.__logic_time(self._timer.current_time), self._timer.current_time))
         self._logger.basic_config(level=main.Logging.DEBUG if verbose else main.Logging.INFO)
@@ -152,6 +151,9 @@ class RepGame:
                 else:
                     main.root_logger.error('Unexpected ending of replay file.')
                     break
+            while timestamp > self._last_action_timestamp:
+                self._logic.nextTick()
+                self._last_action_timestamp += 1
 
 
 class RepManager:
@@ -203,6 +205,9 @@ class RepManager:
 
     def set_round(self, timestamp):
         # 醉了，需要重新检查
+        main.root_logger.debug('set round start: %d', timestamp)
+        callback_backup = self._info_callback
+        self._info_callback = lambda _: None
         self._active_game._timer.stop()
         if timestamp > self._active_game._last_action_timestamp:
             self._active_game.set_round(timestamp)
@@ -213,7 +218,6 @@ class RepManager:
             ts = self._active_game._last_action_timestamp
             if ts not in self._games:
                 self._games[ts] = self._active_game
-                self._active_game.set_round(ts)
             pos = self._games.bisect(timestamp)
             if pos == 0:
                 self._active_game = RepGame(verbose=self._verbose, info_callback=self._info_callback)
@@ -226,7 +230,9 @@ class RepManager:
                 self._active_game = self._games.iloc[pos - 1]
                 if timestamp > self._active_game._last_action_timestamp:
                     self._active_game.set_round(timestamp)
-        self.sig.put(True)
+            self.sig.put(True)
+        self._info_callback = callback_backup
+        main.root_logger.debug('set round fin: %d', self._active_game._last_action_timestamp)
 
     @property
     def current_time(self) -> float:
