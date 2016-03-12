@@ -139,16 +139,19 @@ class RepGame:
             self._timer.elapsed = self.__real_time(timestamp)
             if self._action_buffer is None and not self.queue.empty():
                 self._action_buffer = self.queue.get()
-            while self._action_buffer and self._action_buffer[0] < self._last_action_timestamp:
+            while self._action_buffer and self._action_buffer[0] < timestamp:
                 while self._action_buffer[0] > self._last_action_timestamp:
                     self._logic.nextTick()
                     self._last_action_timestamp += 1
                 if self._action_buffer[1].action_name == 'game_end':
                     self._timer.elapsed = self.__real_time(self._action_buffer[0])
-                    return
+                    break
                 self._action_buffer[1].run(self._logic)
-                if self._action_buffer is None and not self.queue.empty():
+                if not self.queue.empty():
                     self._action_buffer = self.queue.get()
+                else:
+                    main.root_logger.error('Unexpected ending of replay file.')
+                    break
 
 
 class RepManager:
