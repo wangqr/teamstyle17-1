@@ -167,8 +167,8 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
                 ret_str_list.append(s)
 
             elif info['info'] == 'skill_hit':
-                s = '%d %d %d %d;' % (
-                    info_types.index(info['info']), info['time'], skill_types.index(info['type']), info['target'])
+                s = '%d %d %d %d %d;' % (
+                    info_types.index(info['info']), info['time'], skill_types.index(info['type']), info['player'], info['target'])
                 ret_str_list.append(s)
 
             elif info['info'] == 'end':
