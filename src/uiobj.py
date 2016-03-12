@@ -217,7 +217,8 @@ class UIObject(threading.Thread):
         act = json_obj.get('action')
         timestamp = json_obj.get('time') or self._game_obj.current_time
         if act and act[0] == '_':
-            self._game_obj.enqueue(timestamp, action.Action('{"action":"_platform","ai_id":%d}' % self._ai_id, act, None))
+            self._game_obj.enqueue(timestamp, action.Action('{"action":"_platform","ai_id":%d}' % self._ai_id, act,
+                                                            self.send_thread.sig))
         else:
             self._game_obj.enqueue(timestamp, action.Action(obj, 'query', self.send_thread.sig))
 
