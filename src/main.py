@@ -174,8 +174,8 @@ class Game:
     MAX_DELAY_ROUNDS = 1
     ROUNDS_PER_SEC = 100
 
-    def __init__(self, rep_file_name: str, verbose: bool, time_limit: float, seed: int, allow_pause: bool, game_type,
-                 start_paused=False, player_num=2):
+    def __init__(self, rep_file_name: str, verbose: bool, time_limit: float, seed: int, allow_pause: bool,
+                 game_type: int, start_paused=False, player_num=2):
         if seed is None:
             seed = random.randrange(0, 4294967296)
         self._seed = seed
@@ -190,10 +190,8 @@ class Game:
         self._run_logger.start()
         self._time_limit = time_limit
         self._logic = ts17core.interface.Interface(self.__info_callback)
-        init_json = '{"action":"init","seed":' + str(self._seed) + ',"player":' + str(player_num)
-        if game_type is not None:
-            init_json += ',"type":' + str(game_type)
-        init_json += '}'
+        init_json = '{"action":"init","seed":' + str(self._seed) + ',"player":' + str(player_num) +',"type":'\
+                    + str(game_type) + '}'
         self._logic.setInstruction(init_json)
         self._run_logger.sig.put(init_json)
         self._queue = queue.PriorityQueue()
