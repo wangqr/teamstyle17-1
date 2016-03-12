@@ -4,13 +4,14 @@
 """
 usage:
     ts17 [-v|--version] [-h|--help]
-    ts17 run [-r <repfile>] [-s <seed>] [-t <timelimit>] [-T <T>] [-u <u>] [-V] <ai> ...
+    ts17 run [-d] [-r <repfile>] [-s <seed>] [-t <timelimit>] [-T <T>] [-u <u>] [-V] <ai> ...
     ts17 replay [-u <u>] [-V] <repfile>
 
 options:
     -h, --help     show this message
     -v, --version  show current version
 
+    -d             allow pause instruction
     -r <repfile>   specify the name of the rep file
     -s <seed>      specify the map seed
     -t <timelimit> set the time limit of the game in seconds
@@ -173,8 +174,8 @@ class Game:
     MAX_DELAY_ROUNDS = 1
     ROUNDS_PER_SEC = 100
 
-    def __init__(self, rep_file_name: str, verbose: bool, time_limit: float, seed: int, start_paused=False,
-                 player_num=2):
+    def __init__(self, rep_file_name: str, verbose: bool, time_limit: float, seed: int, allow_pause: bool, game_type,
+                 start_paused=False, player_num=2):
         if seed is None:
             seed = random.randrange(0, 4294967296)
         self._seed = seed
@@ -189,7 +190,10 @@ class Game:
         self._run_logger.start()
         self._time_limit = time_limit
         self._logic = ts17core.interface.Interface(self.__info_callback)
-        init_json = '{"action":"init","seed":' + str(self._seed) + ',"player":' + str(player_num) + '}'
+        init_json = '{"action":"init","seed":' + str(self._seed) + ',"player":' + str(player_num)
+        if game_type is not None:
+            init_json += ',"type":' + str(game_type)
+        init_json += '}'
         self._logic.setInstruction(init_json)
         self._run_logger.sig.put(init_json)
         self._queue = queue.PriorityQueue()
@@ -200,6 +204,7 @@ class Game:
             EndSignalGenerator(game_obj=self, time_limit=time_limit).start()
         self.__mutex = threading.Lock()
         self._sync = False
+        self._allow_pause = allow_pause
 
     def mainloop(self):
         if not self._start_paused:
@@ -226,11 +231,15 @@ class Game:
                 continue
             self._logger.debug('>>>>>>>> recv %s', next_action[2].action_json or '')
             if next_action[2].action_name == '_pause':
-                self.__pause_field ^= (1 << (1 + json.loads(next_action[2].action_json)['ai_id']))
-                if self.__pause_field:
-                    self._timer.stop()
+                ai_id = json.loads(next_action[2].action_json)['ai_id']
+                if ai_id >= 0 and not self._allow_pause:
+                    self._logger.error('ignored pause instruction from AI %d', ai_id)
                 else:
-                    self._timer.start()
+                    self.__pause_field ^= (1 << (1 + ai_id))
+                    if self.__pause_field:
+                        self._timer.stop()
+                    else:
+                        self._timer.start()
                 self._logger.debug('<<<<<<<< fin')
                 continue
             elif next_action[2].action_name == '_end':
@@ -387,13 +396,25 @@ def run_main(args: dict):
             root_logger.error('Seed should be in range [0, 4294967296).')
             return
 
+    # check game type
+    if args['-T'] is not None:
+        try:
+            args['-T'] = int(args['-t'])
+        except ValueError:
+            root_logger.error('parameter error.')
+            return
+        if args['-T'] <= 0:
+            root_logger.error('parameter error.')
+            return
+
     rep_file_name = args['-r'] or ('ts17_' + time.strftime('%m%d%H%M%S') + '.rpy')
 
     if not rep_file_name.endswith('.rpy'):
         rep_file_name += '.rpy'
 
     game_obj = Game(time_limit=float(args['-t'] or 0), seed=int(args['-s']) if args['-s'] else None,
-                    player_num=len(args['<ai>']), verbose=args['-V'], rep_file_name=rep_file_name)
+                    player_num=len(args['<ai>']), verbose=args['-V'], rep_file_name=rep_file_name,
+                    allow_pause=bool(args['-d']), game_type=args['-T'])
 
     # init ai_proxy
     ai_proxy.start(args['<ai>'], lambda x: push_queue_ai_proxy(x, game_obj))
