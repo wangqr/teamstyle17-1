@@ -9,9 +9,9 @@ const int kMapSize = 20000;
 const int kMaxObjectNumber = 10000;
 const int kMaxPlayerObjectNumber = 10;  // 实际上应该不会有那么多
 
-const double kDeathRatio = 1 / 4;  // 当前生命值与历史最大生命值之比小于此值即告死亡
-const double kEatableRatio = 5 / 6;  // 目标单位半径与自己单位半径的比值小于此值时可以食用
-const double kDevourDamage = 1 / 3;
+const double kDeathRatio = 1.0 / 4;  // 当前生命值与历史最大生命值之比小于此值即告死亡
+const double kEatableRatio = 5.0 / 6;  // 目标单位半径与自己单位半径的比值小于此值时可以食用
+const double kDevourDamage = 1.0 / 3;
 const int kMaxMoveSpeed = 100;  // 未使用 Dash 时的最大速度
 const int kFoodHealth = 10;
 
