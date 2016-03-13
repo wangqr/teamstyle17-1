@@ -1,0 +1,17 @@
+# Windows 平台：
+
+双击运行 build_project.bat，稍等片刻，此文件夹下会出现一个工程文件（具体文件类型取决于使用的 IDE。以 Microsoft Visual Studio 为例，会出现一个 ts17_ai.sln）。
+
+完成 AI 代码的编写之后，即可编译。工程会自动编译出可使用的 dll 文件（以 VS 为例，编译后的 dll 会出现在此文件夹下的 Debug 或 Release 文件夹内）。
+
+
+# 非 Windows 平台：
+
+自行下载安装 cmake （3.3.2 或更高版本），在此目录下执行 "cmake ."（不含引号），即可构建出相应的工程文件。在 *nix 系统下会默认生成 makefile，可使用 make 进行编译。如需帮助请联系平台组。
+
+
+# AI 编写说明：
+
+打开工程文件，在源文件中找到 ai.cpp，AI 的代码就写在 ai.cpp 的 AIMain 函数内。
+
+如果需要查看各种接口函数、游戏参数，可以参考头文件 basic.h 和 teamstyle17.h。
