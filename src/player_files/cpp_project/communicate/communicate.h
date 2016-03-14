@@ -6,6 +6,6 @@
 #include "basic.h"
 
 typedef char *(*ComFuncType)(char*);
-extern ComFuncType Communicate; // 向平台发送一个字符串并从平台接收一个字符串
+extern ComFuncType Communicate;
 
 # endif

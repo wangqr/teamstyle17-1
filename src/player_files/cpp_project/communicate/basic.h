@@ -46,7 +46,7 @@ enum SkillType {
 
 const int kMaxSkillLevel = 5;
 
-// 技能参数 TODO
+// 技能参数
 const int kLongAttackDamage[kMaxSkillLevel + 1] = { 0, 100, 200, 300, 400, 500 };
 const int kLongAttackRange[kMaxSkillLevel + 1] = { 0, 3500, 4000, 4500, 5000, 5500 };
 const int kLongAttackCastingTime = 10;  // 蓄力时间
