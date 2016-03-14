@@ -43,7 +43,7 @@ class RepGame:
     def __init__(self, verbose: bool, info_callback):
         self._timer = main.Timer()
         self._logger = main.Logging(
-            timer=lambda: '%d @ %.6f' % (self.__logic_time(self._timer.current_time), self._timer.current_time))
+            timer=lambda: '%d @ %.6f' % (self._last_action_timestamp, self._timer.current_time))
         self._logger.basic_config(level=main.Logging.DEBUG if verbose else main.Logging.INFO)
         self._logic = ts17core.interface.Interface(info_callback)
         self.queue = collections.deque()
