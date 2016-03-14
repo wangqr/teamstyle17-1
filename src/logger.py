@@ -38,7 +38,7 @@ class RunLogger(threading.Thread):
 
 class RepGame:
     MAX_DELAY_ROUNDS = 1
-    ROUNDS_PER_SEC = 100
+    ROUNDS_PER_SEC = 20
 
     def __init__(self, verbose: bool, info_callback):
         self._timer = main.Timer()
