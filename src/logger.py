@@ -42,13 +42,13 @@ class RepGame:
 
     def __init__(self, verbose: bool, info_callback):
         self._timer = main.Timer()
+        self._last_action_timestamp = 0
         self._logger = main.Logging(
             timer=lambda: '%d @ %.6f' % (self._last_action_timestamp, self._timer.current_time))
         self._logger.basic_config(level=main.Logging.DEBUG if verbose else main.Logging.INFO)
         self._logic = ts17core.interface.Interface(info_callback)
         self.queue = collections.deque()
         self.sig = queue.Queue()
-        self._last_action_timestamp = 0
         self._action_buffer = None
 
         # RepGame 的 _active 属性用于标识自己当前是否是活动的
