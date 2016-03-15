@@ -291,11 +291,13 @@ class Game:
     def __info_callback(self, obj: str):
         if obj.find('"end"') >= 0:
             j = json.loads(obj)
-            winner_id = -2
+            end_dict = {'info': 'end', 'ai_id': -2}
             for js in j:
                 if js['info'] == 'end':
-                    winner_id = js['ai_id']
-            self.enqueue(0, action.Action('{"action":"game_end", "ai_id":%d}' % winner_id, 'game_end', None))
+                    end_dict = js
+            del end_dict['info']
+            end_dict['action'] = 'game_end'
+            self.enqueue(0, action.Action(json.dumps(end_dict), 'game_end', None))
         self._info_callback(obj)
 
 
