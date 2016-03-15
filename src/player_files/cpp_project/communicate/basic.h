@@ -13,7 +13,7 @@ const double kDeathRatio = 1.0 / 4;  // 当前生命值与历史最大生命值�
 const double kEatableRatio = 5.0 / 6;  // 目标单位半径与自己单位半径的比值小于此值时可以食用
 const double kDevourDamage = 1.0 / 3;
 const int kMaxMoveSpeed = 100;  // 未使用 Dash 时的最大速度
-const int kFoodHealth = 10;
+const int kFoodHealth = 40;
 
 struct Position {
 	double x;
@@ -50,13 +50,13 @@ const int kMaxSkillLevel = 5;
 const int kLongAttackDamage[kMaxSkillLevel + 1] = { 0, 100, 200, 300, 400, 500 };
 const int kLongAttackRange[kMaxSkillLevel + 1] = { 0, 3500, 4000, 4500, 5000, 5500 };
 const int kLongAttackCastingTime = 10;  // 蓄力时间
-const int kShortAttackDamage[kMaxSkillLevel + 1] = { 0, 1000, 1200, 1400, 1600, 1800 };
-const int kShortAttackRange[kMaxSkillLevel + 1] = { 0, 100, 110, 120, 130, 140 };
+const int kShortAttackDamage[kMaxSkillLevel + 1] = { 0, 500, 700, 900, 1100, 1300 };
+const int kShortAttackRange[kMaxSkillLevel + 1] = { 0, 2000, 2200, 2400, 2600, 2800 };
 const int kShieldTime[kMaxSkillLevel + 1] = { 0, 30, 45, 60, 75, 90};
-const int kDashSpeed[kMaxSkillLevel + 1] = { 0, 120, 140, 160, 180, 200 };
+const int kDashSpeed[kMaxSkillLevel + 1] = { 0, 20, 40, 60, 80, 100 };  // 使用加速后的速度增量
 const int kDashTime[kMaxSkillLevel + 1] = { 0, 40, 40, 40, 40, 80 };
 const int kVision[kMaxSkillLevel + 1] = { 5000, 6000, 7000, 8000, 9000, 10000 };
-const int kHealthUpValue = 2000;
+const int kHealthUpValue = 500;
 
 const int kSkillCD[kSkillTypes] = { 80, 80, 100, 100, 0, 0 };
 const int kSkillCost[kSkillTypes] = { 10, 50, 0, 40, 0, 0 };  // 技能使用开销
