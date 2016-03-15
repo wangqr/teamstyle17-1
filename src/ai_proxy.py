@@ -122,6 +122,7 @@ class AICore(object):
         self.path = path
         self.dll_main = self.load_dll_main()
         self.c_string_buffer = ctypes.create_string_buffer(max_message_length)
+        self._c_communicate = None
 
     def load_dll_main(self):
         # Load DLL main function
@@ -139,13 +140,14 @@ class AICore(object):
             assert isinstance(dll_message, bytes)
             return communicate_with_dll(dll_message, enqueue_func, self.id, self.c_string_buffer)
 
-        c_communicate = ctypes.CFUNCTYPE(ctypes.c_char_p, ctypes.c_char_p)(communicate)
+        self._c_communicate = ctypes.CFUNCTYPE(ctypes.c_char_p, ctypes.c_char_p)(communicate)
 
         # Start AI
-        try:
-            self.dll_main(c_communicate, self.id)
-        except Exception as err:
-            main.root_logger.error('[ERROR] ai%d exception %s [%s]' % (self.id, err.__name__, str(err)))
+        while 1:
+            try:
+                self.dll_main(self._c_communicate, self.id)
+            except Exception as err:
+                main.root_logger.error('[ERROR] ai%d exception %s [%s]' % (self.id, err.__name__, str(err)))
 
 
 class AIThread(object):
