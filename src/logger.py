@@ -235,7 +235,7 @@ class RepManager:
                 self._games[ts] = self._active_game
             pos = self._games.bisect(timestamp)
             if pos == 0:
-                self._active_game = RepGame(verbose=self._verbose, info_callback=self._info_callback)
+                self._active_game = RepGame(verbose=self._verbose, info_callback=self.__info_callback)
                 _load_queue(self._rep_file, self._active_game.queue)
                 if timestamp:
                     self._active_game.set_round(timestamp)
