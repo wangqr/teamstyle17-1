@@ -129,7 +129,7 @@ class AICore(object):
         try:
             dll = ctypes.cdll.LoadLibrary(self.path)
         except OSError:
-            main.root_logger.warn('It seems that AI "%s" is not built for current architecture.', self.path)
+            main.root_logger.warn('It seems that AI "%s" can\'t run on current architecture.' % self.path)
             return lambda *x: None
         dll_main = dll.StartAI  # StartAi is the main function in dll (a C function)
         return dll_main
@@ -143,11 +143,11 @@ class AICore(object):
         self._c_communicate = ctypes.CFUNCTYPE(ctypes.c_char_p, ctypes.c_char_p)(communicate)
 
         # Start AI
-        while 1:
-            try:
-                self.dll_main(self._c_communicate, self.id)
-            except Exception as err:
-                main.root_logger.error('[ERROR] ai%d exception %s [%s]' % (self.id, err.__name__, str(err)))
+        try:
+            self.dll_main(self._c_communicate, self.id)
+        except Exception as err:
+            main.root_logger.error('[ERROR] ai%d exception %s [%s]' % (self.id, err.__name__, str(err)))
+            main.root_logger.error('[ERROR] ai%d exit.' % self.id)
 
 
 class AIThread(object):

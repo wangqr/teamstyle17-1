@@ -133,15 +133,11 @@ void HealthUp(int user_id) {
 	UpgradeSkill(user_id, HEALTH_UP);
 }
 
-bool PAUSE_FLAG_ = false;
-
 void PAUSE() {
 	sprintf(msg_send, "pause");
 	Communicate(msg_send);
-	PAUSE_FLAG_ = true;
 }
 
 void CONTINUE() {
 	PAUSE();  // 实际上和 PAUSE 的指令是一样的...
-	PAUSE_FLAG_ = false;
 }
