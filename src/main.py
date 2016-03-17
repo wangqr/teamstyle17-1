@@ -370,7 +370,7 @@ def run_main(args: dict):
         return
 
     for ai in args['<ai>']:
-        if not os.path.isfile(ai) or not ai.endswith(('.dll', '.so')):
+        if not os.path.isfile(ai) or not ai.endswith(('.dll', '.so', '.dylib')):
             root_logger.error('"%s" is not a valid AI.', ai)
             return
 
