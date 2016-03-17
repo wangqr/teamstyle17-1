@@ -66,7 +66,7 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
 def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
     assert isinstance(dll_message, bytes)
 
-    action_name, *msg = str(dll_message)[2:-1].split(sep=' ')
+    action_name, *msg = dll_message.decode('ascii').split(sep=' ')
     skill_types = ['longAttack', 'shortAttack', 'shield', 'dash', 'visionUp', 'healthUp']
     object_types = ['player', 'food', 'nutrient', 'spike', 'target', 'bullet', 'source']
 
