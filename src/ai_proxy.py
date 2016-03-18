@@ -64,15 +64,13 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
 
 
 def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
-    assert isinstance(dll_message, bytes)
-
-    action_name, *msg = dll_message.decode('ascii').split(sep=' ')
     skill_types = ['longAttack', 'shortAttack', 'shield', 'dash', 'visionUp', 'healthUp']
     object_types = ['player', 'food', 'nutrient', 'source', 'spike', 'target', 'bullet']
 
     ret = ''
-
     try:
+        action_name, *msg = dll_message.decode('ascii').split(sep=' ')
+
         if action_name in ['query_map', 'query_status']:
             info_send = dict(action=action_name, time=0, ai_id=ai_id)
             info_send['id'] = int(msg[0]) if action_name == 'query_status' and int(msg[0]) != -1 else ai_id + 1
