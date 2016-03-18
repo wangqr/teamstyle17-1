@@ -68,7 +68,7 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
 
     action_name, *msg = dll_message.decode('ascii').split(sep=' ')
     skill_types = ['longAttack', 'shortAttack', 'shield', 'dash', 'visionUp', 'healthUp']
-    object_types = ['player', 'food', 'nutrient', 'spike', 'target', 'bullet', 'source']
+    object_types = ['player', 'food', 'nutrient', 'source', 'spike', 'target', 'bullet']
 
     ret = ''
 
