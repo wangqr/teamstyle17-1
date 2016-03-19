@@ -7,7 +7,7 @@
 
 const int kMapSize = 20000;
 const int kMaxObjectNumber = 10000;
-const int kMaxPlayerObjectNumber = 10;  // 实际上应该不会有那么多
+const int kMaxPlayerObjectNumber = 5;  // 实际上应该不会有那么多
 
 const double kDeathRatio = 1.0 / 4;  // 当前生命值与历史最大生命值之比小于此值即告死亡
 const double kEatableRatio = 5.0 / 6;  // 目标单位半径与自己单位半径的比值小于此值时可以食用
@@ -51,9 +51,9 @@ const int kMaxSkillLevel = 5;
 const int kLongAttackDamage[kMaxSkillLevel + 1] = { 0, 100, 200, 300, 400, 500 };
 const int kLongAttackRange[kMaxSkillLevel + 1] = { 0, 2500, 3000, 3500, 4000, 4500 };
 const int kLongAttackCastingTime = 10;  // 蓄力时间
-const int kShortAttackDamage[kMaxSkillLevel + 1] = { 0, 500, 700, 900, 1100, 1300 };
-const int kShortAttackRange[kMaxSkillLevel + 1] = { 0, 1000, 1200, 1400, 1600, 1800 };
-const int kShieldTime[kMaxSkillLevel + 1] = { 0, 30, 45, 60, 75, 90};
+const int kShortAttackDamage[kMaxSkillLevel + 1] = { 0, 500, 800, 1000, 1200, 1300 };
+const int kShortAttackRange[kMaxSkillLevel + 1] = { 0, 1400, 1700, 2000, 2300, 2500 };
+const int kShieldTime[kMaxSkillLevel + 1] = { 0, 30, 40, 50, 50, 50};
 const int kDashSpeed[kMaxSkillLevel + 1] = { 0, 20, 40, 60, 80, 100 };  // 使用加速后的速度增量
 const int kDashTime[kMaxSkillLevel + 1] = { 0, 40, 40, 40, 40, 80 };
 const int kVision[kMaxSkillLevel + 1] = { 5000, 6000, 7000, 8000, 9000, 10000 };
