@@ -56,8 +56,8 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
                 ret_str_list.append(s)
             ret_str = ' '.join(ret_str_list)
 
-    except KeyError as err:
-        main.root_logger.error('ai_proxy exception %s [%s]' % (type(err).__name__, str(err)))
+    except KeyError as e:
+        main.root_logger.error('ai_proxy exception %s [%s]', ai_id, type(e).__name__, str(e))
 
     # print("[INFO] ret for dll [%s]" % ret_str)
     return ret_str
@@ -106,8 +106,8 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
             msg_received = enqueue_func(msg_send)
             current_time = json.loads(msg_received)['time']  # 返回的字段中应该有 'time'
             ret = str(int(current_time))
-    except Exception as err:
-        main.root_logger.error('[ERROR] ai%d exception %s [%s]' % (ai_id, type(err).__name__, str(err)))
+    except Exception as e:
+        main.root_logger.error('ai %d exception %s [%s] during communication', ai_id, type(e).__name__, str(e))
         ret = ''
 
     set_string_value(string_buffer, ret)
@@ -144,8 +144,7 @@ class AICore(object):
         try:
             self.dll_main(self._c_communicate, self.id)
         except Exception as err:
-            main.root_logger.error('[ERROR] ai%d exception %s [%s]' % (self.id, type(err).__name__, str(err)))
-            main.root_logger.error('[ERROR] ai%d exit.' % self.id)
+            main.root_logger.error('ai %d exception %s [%s]', ai_id, type(e).__name__, str(e))
 
 
 class AIThread(object):
