@@ -107,7 +107,7 @@ def communicate_with_dll(dll_message, enqueue_func, ai_id, string_buffer):
             current_time = json.loads(msg_received)['time']  # 返回的字段中应该有 'time'
             ret = str(int(current_time))
     except Exception as err:
-        main.root_logger.error('[ERROR] ai%d exception %s [%s]' % (ai_id, err.__name__, str(err)))
+        main.root_logger.error('[ERROR] ai%d exception %s [%s]' % (ai_id, type(err).__name__, str(err)))
         ret = ''
 
     set_string_value(string_buffer, ret)
@@ -144,7 +144,7 @@ class AICore(object):
         try:
             self.dll_main(self._c_communicate, self.id)
         except Exception as err:
-            main.root_logger.error('[ERROR] ai%d exception %s [%s]' % (self.id, err.__name__, str(err)))
+            main.root_logger.error('[ERROR] ai%d exception %s [%s]' % (self.id, type(err).__name__, str(err)))
             main.root_logger.error('[ERROR] ai%d exit.' % self.id)
 
 
