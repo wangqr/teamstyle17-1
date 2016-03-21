@@ -40,7 +40,7 @@ import logger
 import ts17core
 import ts17core.interface
 
-__version__ = '1.0.2'
+__version__ = '1.1'
 
 
 class Timer:
