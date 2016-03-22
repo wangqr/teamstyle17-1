@@ -94,7 +94,11 @@ class RepGame:
                 else:
                     while self._action_buffer[0] > self._last_action_timestamp and self.__logic_time(
                             self.current_time) > self._last_action_timestamp:
-                        self._logic.nextTick()
+                        try:
+                            self._logic.nextTick()
+                        except Exception as e:
+                            main.root_logger.critical('logic exception %s [%s]', type(e).__name__, str(e))
+                            raise
                         self._last_action_timestamp += 1
                     continue
             if next_action[0] < self.__logic_time(self.current_time):
@@ -107,7 +111,11 @@ class RepGame:
                 j_str = j_str.replace('\n', '')
             self._logger.debug('>>>>>>>> recv %s', j_str or '')
             while next_action[0] > self._last_action_timestamp:
-                self._logic.nextTick()
+                try:
+                    self._logic.nextTick()
+                except Exception as e:
+                    main.root_logger.critical('logic exception %s [%s]', type(e).__name__, str(e))
+                    raise
                 self._last_action_timestamp += 1
             next_action[1].set_timestamp(self._last_action_timestamp)
             next_action[1].run(self._logic)
@@ -142,7 +150,11 @@ class RepGame:
                 self._action_buffer = self.queue.popleft()
             while self._action_buffer and self._action_buffer[0] < timestamp:
                 while self._action_buffer[0] > self._last_action_timestamp:
-                    self._logic.nextTick()
+                    try:
+                        self._logic.nextTick()
+                    except Exception as e:
+                        main.root_logger.critical('logic exception %s [%s]', type(e).__name__, str(e))
+                        raise
                     self._last_action_timestamp += 1
                 if self._action_buffer[1].action_name == 'game_end':
                     self._timer.elapsed = self.__real_time(self._action_buffer[0])
@@ -154,7 +166,11 @@ class RepGame:
                     main.root_logger.error('Unexpected ending of replay file.')
                     break
             while timestamp > self._last_action_timestamp:
-                self._logic.nextTick()
+                try:
+                    self._logic.nextTick()
+                except Exception as e:
+                    main.root_logger.critical('logic exception %s [%s]', type(e).__name__, str(e))
+                    raise
                 self._last_action_timestamp += 1
 
 

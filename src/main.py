@@ -223,7 +223,11 @@ class Game:
                 except queue.Empty:
                     pass
             if next_action is None:
-                self._logic.nextTick()
+                try:
+                    self._logic.nextTick()
+                except Exception as e:
+                    main.root_logger.critical('logic exception %s [%s]', type(e).__name__, str(e))
+                    raise
                 self._last_action_timestamp += 1
                 self._logger.debug('')
                 continue
@@ -259,7 +263,11 @@ class Game:
                     self._logger.warn('logic is %d rounds slower than main timer, trying to sync by pausing ...',
                                       self.__logic_time(next_action[0]) - self._last_action_timestamp)
                 while self.__logic_time(next_action[0]) > self._last_action_timestamp:
-                    self._logic.nextTick()
+                    try:
+                        self._logic.nextTick()
+                    except Exception as e:
+                        main.root_logger.critical('logic exception %s [%s]', type(e).__name__, str(e))
+                        raise
                     self._last_action_timestamp += 1
             next_action[2].set_timestamp(self._last_action_timestamp)
             if next_action[2].action_name == 'instruction':
