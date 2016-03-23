@@ -226,7 +226,7 @@ class Game:
                 try:
                     self._logic.nextTick()
                 except Exception as e:
-                    main.root_logger.critical('logic exception %s [%s]', type(e).__name__, str(e))
+                    root_logger.critical('logic exception %s [%s]', type(e).__name__, str(e))
                     raise
                 self._last_action_timestamp += 1
                 self._logger.debug('')
@@ -266,7 +266,7 @@ class Game:
                     try:
                         self._logic.nextTick()
                     except Exception as e:
-                        main.root_logger.critical('logic exception %s [%s]', type(e).__name__, str(e))
+                        root_logger.critical('logic exception %s [%s]', type(e).__name__, str(e))
                         raise
                     self._last_action_timestamp += 1
             next_action[2].set_timestamp(self._last_action_timestamp)
@@ -343,12 +343,27 @@ def _sigint_handler(*args, **kwargs):
     os.kill(os.getpid(), signal.SIGTERM)
 
 
+class Unbuffered(object):
+    def __init__(self, stream):
+        self.stream = stream
+
+    def write(self, data):
+        self.stream.write(data)
+        self.stream.flush()
+
+    def __getattr__(self, attr):
+        return getattr(self.stream, attr)
+
+
 def main():
     global root_logger
     signal.signal(signal.SIGINT, _sigint_handler)
     args = docopt.docopt(__doc__,
                          version='ts17-platform ' + __version__ + ' [ts17-core ver ' + ts17core.__version__ + ']')
     root_logger.basic_config(level=(Logging.DEBUG if args['-V'] else Logging.INFO))
+    if args['-u'] == '-1':
+        args['-u'] = None
+        sys.stderr = Unbuffered(sys.stderr)
     if args['run']:
         run_main(args)
         root_logger.info('quit.')
