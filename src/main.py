@@ -461,7 +461,7 @@ def run_main(args: dict):
 
     # init ui
     game_ui_obj = None
-    if args['-u'] > 0:
+    if args['-u'] and args['-u'] > 0:
         game_ui_obj = uiobj.UIObject(game_obj, ai_id=-1, port=int(args['-u']))
         game_obj._info_callback = lambda x: info_call_back(game_ui_obj, x)
         game_ui_obj.start()
@@ -506,7 +506,7 @@ def replay_main(args: dict):
     rep_mgr = logger.RepManager(rep_file_name=rep_file_name, verbose=args['-V'], start_paused=bool(args['-u']))
 
     game_ui_obj = None
-    if args['-u'] > 0:
+    if args['-u'] and args['-u'] > 0:
         game_ui_obj = uiobj.UIObject(rep_mgr, ai_id=-1, port=int(args['-u']))
         rep_mgr._info_callback = lambda x: info_call_back(game_ui_obj, x)
         rep_mgr._ui_running = lambda: bool(
