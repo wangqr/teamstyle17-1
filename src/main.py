@@ -175,7 +175,7 @@ class Game:
     ROUNDS_PER_SEC = 100
 
     def __init__(self, rep_file_name: str, verbose: bool, time_limit: float, seed: int, allow_pause: bool,
-                 game_type: int, start_paused=False, player_num=2):
+                 game_type: int, write_to_file: bool, start_paused=False, player_num=2):
         if seed is None:
             seed = random.randrange(0, 4294967296)
         self._seed = seed
@@ -190,7 +190,7 @@ class Game:
         self._run_logger.start()
         self._time_limit = time_limit
         self._logic = ts17core.interface.Interface(self.__info_callback)
-        init_json = '{"action":"init","seed":' + str(self._seed) + ',"player":' + str(player_num) +',"type":'\
+        init_json = '{"action":"init","seed":' + str(self._seed) + ',"player":' + str(player_num) + ',"type":'\
                     + str(game_type) + '}'
         self._logic.setInstruction(init_json)
         self._run_logger.sig.put(init_json)
@@ -203,6 +203,7 @@ class Game:
         self.__mutex = threading.Lock()
         self._sync = False
         self._allow_pause = allow_pause
+        self._write_to_file = write_to_file
 
     def mainloop(self):
         if not self._start_paused:
@@ -306,6 +307,10 @@ class Game:
             del end_dict['info']
             end_dict['action'] = 'game_end'
             self.enqueue(0, action.Action(json.dumps(end_dict), 'game_end', None))
+            if self._write_to_file:
+                f = open('winner.txt', mode='w')
+                f.write(str(end_dict.get('ai_id', -2)))
+                f.close()
         self._info_callback(obj)
 
 
@@ -362,7 +367,6 @@ def main():
                          version='ts17-platform ' + __version__ + ' [ts17-core ver ' + ts17core.__version__ + ']')
     root_logger.basic_config(level=(Logging.DEBUG if args['-V'] else Logging.INFO))
     if args['-u'] == '-1':
-        args['-u'] = None
         sys.stderr = Unbuffered(sys.stderr)
     if args['run']:
         run_main(args)
@@ -439,7 +443,7 @@ def run_main(args: dict):
         except ValueError:
             root_logger.error('parameter error.')
             return
-        if args['-u'] <= 0 or args['-u'] >= 65536:
+        if args['-u'] == 0 or args['-u'] <= -2 or args['-u'] >= 65536:
             root_logger.error('parameter error.')
             return
 
@@ -450,14 +454,14 @@ def run_main(args: dict):
 
     game_obj = Game(time_limit=float(args['-t'] or 0), seed=int(args['-s']) if args['-s'] else None,
                     player_num=len(args['<ai>']), verbose=args['-V'], rep_file_name=rep_file_name,
-                    allow_pause=bool(args['-d']), game_type=args['-T'])
+                    allow_pause=bool(args['-d']), game_type=args['-T'], write_to_file=(args['-u'] == -1))
 
     # init ai_proxy
     ai_proxy.start(args['<ai>'], lambda x: push_queue_ai_proxy(x, game_obj))
 
     # init ui
     game_ui_obj = None
-    if args['-u']:
+    if args['-u'] > 0:
         game_ui_obj = uiobj.UIObject(game_obj, ai_id=-1, port=int(args['-u']))
         game_obj._info_callback = lambda x: info_call_back(game_ui_obj, x)
         game_ui_obj.start()
@@ -495,14 +499,14 @@ def replay_main(args: dict):
         except ValueError:
             root_logger.error('parameter error.')
             return
-        if args['-u'] <= 0 or args['-u'] >= 65536:
+        if args['-u'] == 0 or args['-u'] <= -2 or args['-u'] >= 65536:
             root_logger.error('parameter error.')
             return
 
     rep_mgr = logger.RepManager(rep_file_name=rep_file_name, verbose=args['-V'], start_paused=bool(args['-u']))
 
     game_ui_obj = None
-    if args['-u']:
+    if args['-u'] > 0:
         game_ui_obj = uiobj.UIObject(rep_mgr, ai_id=-1, port=int(args['-u']))
         rep_mgr._info_callback = lambda x: info_call_back(game_ui_obj, x)
         rep_mgr._ui_running = lambda: bool(
