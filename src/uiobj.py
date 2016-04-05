@@ -112,12 +112,12 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
                     index = skill_types.index(skill['name'])
                     skill_levels[index] = skill['level']
                     skill_cds[index] = skill['cd']
-                s = '%d %d %d %d %d %d %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d;' % (
+                s = '%d %d %d %d %d %d %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d;' % (
                     player['id'], player['ai_id'], player['health'], player['max_health'], player['vision'], player['ability'],
                     player['r'], player['pos'][0], player['pos'][1], player['pos'][2], player['speed'][0], player['speed'][1], player['speed'][2],
                     skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5],
                     skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5],
-                    player['longattackcasting'], player['shieldtime'], player['dashtime'])
+                    player['longattackcasting'], player['shortattackcasting'], player['shieldtime'], player['dashtime'])
                 ret_str_list.append(s)
             ret_str = '\ns'.join(ret_str_list) + '#\n'
 
@@ -126,9 +126,9 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
             info = json.loads(msg)
             ret_str_list.append('%d|' % info['time'])
             for obj in info['objects']:
-                s = '%d %d %d %.10f %.10f %.10f %.10f %d %d;' % (
+                s = '%d %d %d %.10f %.10f %.10f %.10f %d %d %d;' % (
                     int(obj['id']), int(obj['ai_id']), int(object_types.index(obj['type'])),
-                    obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'], obj['longattackcasting'], obj['shieldtime'])
+                    obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'], obj['longattackcasting'], obj['shortattackcasting'], obj['shieldtime'])
                 ret_str_list.append(s)
             ret_str = '\nm'.join(ret_str_list) + '#\n'
 
@@ -139,7 +139,7 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
                 if info['info'] == 'object':
                     s = '%d %d %d %d %d %.10f %.10f %.10f %.10f %d %d %d;' % (
                         info_types.index(info['info']), info['time'], info['id'], info['ai_id'], object_types.index(info['type']),
-                        info['pos'][0], info['pos'][1], info['pos'][2], info['r'], -1, 0, info['nutrientmove'])  # info['longattackcasting'], info['shieldtime'] 来自逻辑的增量更新中没有这两个参数，初始化为默认值
+                        info['pos'][0], info['pos'][1], info['pos'][2], info['r'], -1, -1, 0, info['nutrientmove'])  # info['longattackcasting'], info['shortattackcasting'], info['shieldtime'] 来自逻辑的增量更新中没有这两个参数，初始化为默认值
                     ret_str_list.append(s)
 
                 elif info['info'] == 'delete':
@@ -154,12 +154,12 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
                         index = skill_types.index(skill['name'])
                         skill_levels[index] = skill['level']
                         skill_cds[index] = skill['cd']
-                    s = '%d %d %d %d %d %d %d %d %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d;' % (
+                    s = '%d %d %d %d %d %d %d %d %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d;' % (
                         info_types.index(info['info']), info['time'], info['id'], info['ai_id'], info['health'], info['max_health'], info['vision'], info['ability'],
                         info['r'], info['pos'][0], info['pos'][1], info['pos'][2], info['speed'][0], info['speed'][1], info['speed'][2],
                         skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5],
                         skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5],
-                        info['longattackcasting'], info['shieldtime'], info['dashtime'])
+                        info['longattackcasting'], info['shortattackcasting'], info['shieldtime'], info['dashtime'])
                     ret_str_list.append(s)
 
                 elif info['info'] == 'skill_cast':

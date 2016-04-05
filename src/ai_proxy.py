@@ -38,21 +38,21 @@ def load_msg_from_logic(msg, action_name, ai_id, skill_types=None, object_types=
                     index = skill_types.index(skill['name'])
                     skill_levels[index] = skill['level']
                     skill_cds[index] = skill['cd']
-                s = '%d %d %d %d %d %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d;' % (
+                s = '%d %d %d %d %d %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d;' % (
                     player['id'], player['health'], player['max_health'], player['vision'], player['ability'], player['r'],
                     player['pos'][0], player['pos'][1], player['pos'][2], player['speed'][0], player['speed'][1], player['speed'][2],
                     skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5],
                     skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5],
-                    player['longattackcasting'], player['shieldtime'], player['dashtime'])
+                    player['longattackcasting'], player['shortattackcasting'], player['shieldtime'], player['dashtime'])
                 ret_str_list.append(s)
             ret_str = ' '.join(ret_str_list)
 
         elif action_name == 'query_map':
             ret_str_list.append('%d|' % info['time'])
             for obj in info['objects']:
-                s = '%d %d %d %.10f %.10f %.10f %.10f %d %d;' % (
+                s = '%d %d %d %.10f %.10f %.10f %.10f %d %d %d;' % (
                     int(obj['id']), int(obj['ai_id']), int(object_types.index(obj['type'])),
-                    obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'], obj['longattackcasting'], obj['shieldtime'])
+                    obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'], obj['longattackcasting'], obj['shortattackcasting'], obj['shieldtime'])
                 ret_str_list.append(s)
             ret_str = ' '.join(ret_str_list)
 
