@@ -117,7 +117,7 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
                     player['r'], player['pos'][0], player['pos'][1], player['pos'][2], player['speed'][0], player['speed'][1], player['speed'][2],
                     skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5],
                     skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5],
-                    player['longattackcasting'], player['shortattackcasting'], player['shieldtime'], player['dashtime'])
+                    player['longattackcasting'], player.get('shortattackcasting', -1), player['shieldtime'], player['dashtime'])
                 ret_str_list.append(s)
             ret_str = '\ns'.join(ret_str_list) + '#\n'
 
@@ -128,7 +128,7 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
             for obj in info['objects']:
                 s = '%d %d %d %.10f %.10f %.10f %.10f %d %d %d;' % (
                     int(obj['id']), int(obj['ai_id']), int(object_types.index(obj['type'])),
-                    obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'], obj['longattackcasting'], obj['shortattackcasting'], obj['shieldtime'])
+                    obj['pos'][0], obj['pos'][1], obj['pos'][2], obj['r'], obj['longattackcasting'], obj.get('shortattackcasting', -1), obj['shieldtime'])
                 ret_str_list.append(s)
             ret_str = '\nm'.join(ret_str_list) + '#\n'
 
@@ -165,7 +165,7 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
                 elif info['info'] == 'skill_cast':
                     s = '%d %d %d %d %d %.10f %.10f %.10f;' % (
                         info_types.index(info['info']), info['time'], info['source'], skill_types.index(info['type']),
-                        -1, info.get('x') or 0, info.get('y') or 0, info.get('z') or 0)  # 逻辑说并没有 'target' T_T
+                        -1, info.get('x', 0), info.get('y', 0), info.get('z', 0))  # 逻辑说并没有 'target' T_T
                     ret_str_list.append(s)
 
                 elif info['info'] == 'skill_hit':
