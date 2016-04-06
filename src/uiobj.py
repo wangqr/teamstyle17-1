@@ -159,7 +159,7 @@ def load_msg_from_logic(msg: str, action_name: str) -> str:  # 从 ai_proxy 移�
                         info['r'], info['pos'][0], info['pos'][1], info['pos'][2], info['speed'][0], info['speed'][1], info['speed'][2],
                         skill_levels[0], skill_levels[1], skill_levels[2], skill_levels[3], skill_levels[4], skill_levels[5],
                         skill_cds[0], skill_cds[1], skill_cds[2], skill_cds[3], skill_cds[4], skill_cds[5],
-                        info['longattackcasting'], info['shortattackcasting'], info['shieldtime'], info['dashtime'])
+                        info['longattackcasting'], info.get('shortattackcasting', -1), info['shieldtime'], info['dashtime'])
                     ret_str_list.append(s)
 
                 elif info['info'] == 'skill_cast':
